@@ -32,57 +32,28 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "MatlabIO.hpp"
+#ifndef MATLABIOCONTAINER_HPP_
+#define MATLABIOCONTAINER_HPP_
+#include <string>
+#include <typeinfo>
+#include <boost/any.hpp>
+class MatlabIOContainer {
+private: 
+    string name_;
+    boost::any data_;
+public:
+    // constructors
+    MatlabIOContainer() {}
+    MatlabIOContainer(const string name, const boost::any data) : name_(name), data_(data) {}
+    // destructor
+    ~MatlabIOContainer();
+    // set methods
+    void setName(const string name) { name_ = name; }
+    void setData(const boost::any data) { data_ = data; }
+    // get methods
+    std::type_info & type(void) const { return data_.type };
+    string name(void) const { return name_; }
+    template<class T> T data(void) const { return boost::any_cast<T>(name_); }
+};
 
-bool MatlabIO::open(string filename, string mode) {
-
-    // open the file
-    if (mode.compare("-r") != 0 || mode.compare("-w") != 0) return false;
-    fid_ = fopen(filename.c_str(), mode.c_str);
-    if (!fid_) return false;
-    else return true;
-}
-
-bool close(void) {
-
-    // close the file and release any associated objects
-    int err = fclose(fid_);
-    fid_ = NULL;
-    if (err) return false;
-    else return true;
-}
-
-
-void MatlabIO::getHeader(void) {
-    // get the header information from the Mat file
-    for (int n = 0; n < HEADER_LENGTH+1; ++n) header_[n] = '\0';
-    fread(header_,  sizeof(char), HEADER_LENGTH,  fid_);
-    fread(subsys_,  sizeof(char), SUBSYS_LENGTH,  fid_);
-    fread(&version_, sizeof(int16_t), VERSION_LENGTH, fid_);
-    fread(&endian_,  sizeof(int16_t), ENDIAN_LENGTH,  fid_);
-}
-
-
-MatlabIOContainer MatlabIO::readVariable(void) {
-
-    // get the data type and number of bytes consumed
-    // by this variable
-    int data_type;
-    int nbytes;
-    fread(&data_type, sizeof(int), 1, fid_);
-    fread(&nbytes,    sizeof(int), 1, fid_);
-
-    // read the binary data block
-    char * data = new char[nbytes];
-    fread(data, sizeof(char), nbytes, fid_);
-
-    MatlabIOContainer variable;
-    return variable;
-}
-
-std::vector<MatlabIOContainer> MatlabIO::read(void) {
-
-    // allocate the output
-    std::vector<MatlabIOContainer> variables;
-    return variables;
-}
+#endif
