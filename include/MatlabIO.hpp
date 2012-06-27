@@ -32,6 +32,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
 #ifndef MATLABIO_HPP_
 #define MATLABIO_HPP_
 #include <string>
@@ -45,7 +46,15 @@
 #include "esfstream.hpp"
 #include "typetraits.hpp"
 
-//#include "hdf5.h"
+/*! @class MatlabIO
+ *  @brief Matlab Mat file parser for C++ OpenCV
+ *
+ *  This class provides the capacity to read and write Mat files
+ *  produced by Matlab. The OpenCV cv::Mat class is used for the
+ *  internal storage of matrices. The class also provides methods
+ *  to inspect the contents of a Mat-file, read all variables, or
+ *  read a single variable by name.
+ */
 class MatlabIO {
 private:
     // member variables
@@ -64,8 +73,6 @@ private:
     void getHeader(void);
     void setHeader(void);
     bool hasVariable(void) { return fid_.peek() != EOF; }
-    template<class T> T swapEndian(const T &t);
-    template<class T> std::vector<T> swapEndian(const std::vector<T> &t);
 	template<class T> MatlabIOContainer constructMatrix(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real, std::vector<char>& imag, uint32_t stor_type);
 	MatlabIOContainer constructString(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real);
 	MatlabIOContainer constructSparse(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real, std::vector<char>& imag);

@@ -40,6 +40,12 @@
 using namespace std;
 using namespace cv;
 
+/*! @brief Open a filestream for reading or writing
+ *
+ * @param filename the full name and filepath of the file
+ * @param mode either "r" for reading or "w" for writing
+ * @return true if the file open succeeded, false otherwise
+ */
 bool MatlabIO::open(string filename, string mode) {
 
     // open the file
@@ -49,6 +55,12 @@ bool MatlabIO::open(string filename, string mode) {
     return !fid_.fail();
 }
 
+/*! @brief close the filestream and release all resources
+ *
+ * @return true if the filestream was successfully closed,
+ * false otherwise. Even in the case of failure, the filestream
+ * will no longer point to a valid object
+ */
 bool MatlabIO::close(void) {
 
     // close the file and release any associated objects
@@ -56,25 +68,14 @@ bool MatlabIO::close(void) {
     return !fid_.fail();
 }
 
-template<class T>
-T MatlabIO::swapEndian(const T &in) {
-    char N = sizeof(T);
-    T out = in;
-    char *data = reinterpret_cast<char *>(&out);
-    for (char n = 0; n < N; n+=2) swap(data[n], data[n+1]);
-    return out;
-}
 
-template<class T>
-vector<T> MatlabIO::swapEndian(const vector<T> &in) {
-    int N = in.size()*sizeof(T);
-    vector<T> out(in);
-    char *data = reinterpret_cast<char *>(&(out[0]));
-    for (int n = 0; n < N; n+=2) swap(data[n], data[n+1]);
-    return out;
-}
-
-
+/*! @brief product of the elements of a vector
+ *
+ * The function is useful for calculating the total number
+ * of elements in an array given a vector of dims.
+ * @param vec the input vector
+ * @return the product of elements in the input
+ */
 template<class T>
 T product(const vector<T>& vec) {
 	T acc = 1;
@@ -82,6 +83,15 @@ T product(const vector<T>& vec) {
 	return acc;
 }
 
+/*! @brief convert the type of a variable
+ *
+ * Given a vector of type char, interpret the data as an
+ * vector of type T1, and convert it to a vector of type
+ * T2.
+ * @param in the input char vector
+ * @return the same data, reinterpreted as type T2 through
+ * storage type T1
+ */
 template<class T1, class T2>
 vector<T2> convertPrimitiveType(const vector<char>& in) {
 
@@ -95,6 +105,15 @@ vector<T2> convertPrimitiveType(const vector<char>& in) {
 
 }
 
+/*! @brief get the .Mat file header information
+ *
+ * The fields read are:
+ * header_ the matlab header as a human readable string,
+ * subsys_ subsystem specific information,
+ * version_ the .Mat file version (5 or 73),
+ * endian_ the bye ordering of the .Mat file. If the byte ordering
+ * needs reversal, this is automatically handled by esfstream.
+ */
 void MatlabIO::getHeader(void) {
     // get the header information from the Mat file
     for (int n = 0; n < HEADER_LENGTH+1; ++n) header_[n] = '\0';
@@ -136,6 +155,20 @@ MatlabIOContainer MatlabIO::primitiveFromBin(vector<char> data, uint32_t nbytes)
     return variable;
 }
 
+/*! @brief interpret the variable header information
+ *
+ * Given a binary data blob, determine the data type and number of bytes
+ * that constitute the data blob. This internally handles whether the
+ * header is in long or short format.
+ *
+ * @param data_type the returned data type
+ * @param dbytes the returned number of bytes that constitute the data blob
+ * @param wbytes the whole number of bytes that include the header size,
+ * the size of the data and any padding to 64-bit boundaries. This is equivalent
+ * to the entire number of bytes effectively used by a variable
+ * @param data the input binary blob
+ * @return a pointer to the beginning of the data segment of the binary blob
+ */
 const char * MatlabIO::readVariableTag(uint32_t &data_type, uint32_t &dbytes, uint32_t &wbytes, const char *data) {
     
 	bool small = false;
@@ -162,12 +195,34 @@ const char * MatlabIO::readVariableTag(uint32_t &data_type, uint32_t &dbytes, ui
     return data + (small ? 4 : 8);
 }
 
+/*! @brief construct a structure
+ *
+ * TODO: implement this
+ * @param name
+ * @param dims
+ * @param real
+ * @return
+ */
 MatlabIOContainer MatlabIO::constructStruct(vector<char>& name, vector<int32_t>& dims, vector<char>& real) {
 
 	vector<MatlabIOContainer> strct;
 	return MatlabIOContainer(string(&(name[0])), strct);
 }
 
+/*! @brief construct a cell array
+ *
+ * If the variable is of type MAT_CELL, construct a cell array. This is done by
+ * iteratively calling collateMatrixFields() on each element of the cell, and
+ * storing the result in a vector<MatlabIOContainer>.
+ * Cell fields may not have a name, but are still required to have a name tag. In
+ * this case, placeholder names are substituted. The dimensionality of the cell
+ * array is ignored, and the size is linearized in column major format.
+ *
+ * @param name the variable name
+ * @param dims the dimesionality of the cell array (ignored)
+ * @param real the real part
+ * @return the wrapped cell array
+ */
 MatlabIOContainer MatlabIO::constructCell(vector<char>& name, vector<int32_t>& dims, vector<char>& real) {
 
 	vector<MatlabIOContainer> cell;
@@ -185,12 +240,31 @@ MatlabIOContainer MatlabIO::constructCell(vector<char>& name, vector<int32_t>& d
 	return MatlabIOContainer(string(&(name[0])), cell);
 }
 
+/*! @brief construct a sparse matrix
+ *
+ * TODO: implement this
+ * @param name
+ * @param dims
+ * @param real
+ * @param imag
+ * @return
+ */
 MatlabIOContainer MatlabIO::constructSparse(vector<char>& name, vector<int32_t>& dims, vector<char>& real, vector<char>& imag) {
 
 	MatlabIOContainer variable;
 	return variable;
 }
 
+/*! @brief construct a string from an extracted set of fields
+ *
+ * If the data is of type char, the data is stored as a string rather than a matrix.
+ * The dimensionality is ignored (the data is linearized)
+ *
+ * @param name the variable name
+ * @param dims the variable dimensionality (ignored)
+ * @param real the string data
+ * @return the wrapped string
+ */
 MatlabIOContainer MatlabIO::constructString(vector<char>& name, vector<int32_t>& dims, vector<char>& real) {
 	// make sure the data is null terminated
 	real.push_back('\0');
@@ -198,7 +272,24 @@ MatlabIOContainer MatlabIO::constructString(vector<char>& name, vector<int32_t>&
 }
 
 
-
+/*! @brief construct a matrix from an extracted set of fields
+ *
+ * Given the variable size, name, data and data type, construct a matrix.
+ * Note that Matlab may store variables in a different data type to the
+ * actual variable data type (T) to save space. For example matrix a = [1 2 3 4 5];
+ * in Matlab will intrinsically be of type double (everything is unless otherwise
+ * explicitly stated) but could be stored as a uint8_t to save space.
+ * The type of the variable returned should necessarily be double, since
+ * it's impossible to know at compile time which data types Matlab has decided
+ * to store a set of variables in.
+ *
+ * @param name the variable name
+ * @param dims the variable dimensionality (i, j, k, ...)
+ * @param real the real part
+ * @param imag the imaginary part (imag.size() == 0 if the data is real)
+ * @param stor_type the storage type of the value
+ * @return the wrapped matrix
+ */
 template<class T>
 MatlabIOContainer MatlabIO::constructMatrix(vector<char>& name, vector<int32_t>& dims, vector<char>& real, vector<char>& imag, uint32_t stor_type) {
 
@@ -289,7 +380,21 @@ MatlabIOContainer MatlabIO::constructMatrix(vector<char>& name, vector<int32_t>&
 	return MatlabIOContainer(string(&(name[0])), mat);
 }
 
-
+/*! @brief interpret all fields of a matrix
+ *
+ * collateMatrixFields takes a binary blob of data and strips out the matrix fields.
+ * These fields necessarily include: the variable dimensionality, the variable name
+ * and the real part of the variable data. It optionally includes the imaginary part
+ * of the variable data if that exists too. The extracted fields are used to either
+ * construct a matrix, cell array or struct, or a scalar in the case where the variable
+ * dimensionality is (1,1)
+ *
+ * @param data_type the type of the data stored in the binary blob
+ * @param nbytes the number of bytes that constitute the binary blob
+ * @param data the binary blob
+ *
+ * @return the variable (matrix, struct, cell, scalar) wrapped in a container
+ */
 MatlabIOContainer MatlabIO::collateMatrixFields(uint32_t data_type, uint32_t nbytes, vector<char> data) {
 
     // get the flags
@@ -369,7 +474,19 @@ MatlabIOContainer MatlabIO::collateMatrixFields(uint32_t data_type, uint32_t nby
     return variable;
 }
 
-
+/*! @brief uncompress a variable
+ *
+ * If the data type of a variable is MAT_COMPRESSED, then the binary data blob
+ * has been compressed using zlib compression. This function uncompresses the blob,
+ * then calls readVariable() to interpret the actual data
+ *
+ * @param data_type the type of the data stored in the binary blob
+ * @param dbytes the number of bytes that constitue the binary blob
+ * @param wbytes the whole number of bytes that consistute the header,
+ * the binary blob, and any padding to 64-bit boundaries
+ * @param data the binary blob
+ * @return the binary blob, uncompressed
+ */
 vector<char> MatlabIO::uncompressVariable(uint32_t& data_type, uint32_t& dbytes, uint32_t& wbytes, const vector<char> &data) {
     // setup the inflation parameters
     char buf[8];
@@ -405,6 +522,16 @@ vector<char> MatlabIO::uncompressVariable(uint32_t& data_type, uint32_t& dbytes,
 
 }
 
+/*! @brief Interpret a variable from a binary block of data
+ *
+ * This function may be called recursively when either uncompressing data or interpreting
+ * fields of a struct or cell array
+ *
+ * @param data_type the type of the data stored in the binary blob
+ * @param nbytes the number of bytes that constitute the binary blob
+ * @param data the binary blob
+ * @return an interpreted variable
+ */
 MatlabIOContainer MatlabIO::readVariable(uint32_t data_type, uint32_t nbytes, const vector<char> &data) {
 
     // interpret the data
@@ -445,7 +572,16 @@ MatlabIOContainer MatlabIO::readVariable(uint32_t data_type, uint32_t nbytes, co
     return variable;
 }
 
-
+/*! @brief read a block of data from the file being parsed
+ *
+ * This function attempts to read an entire variable from the file being parsed.
+ * The data block is then encapsulated in a vector and passed onto readVariable()
+ * for interpretation. This design means that the file is touched a minimal number
+ * of times, and later manipulation of the data can make use of automatic memory
+ * management, reference counting, etc.
+ *
+ * @return the block of data interpreted as a variable and stored in a generic container
+ */
 MatlabIOContainer MatlabIO::readBlock(void) {
 
     // allocate the output
@@ -482,7 +618,18 @@ MatlabIOContainer MatlabIO::readBlock(void) {
 }
 
 
-
+/*! @brief Read all variables from a file
+ *
+ * Reads every variable encountered when parsing a valid Matlab .Mat file.
+ * If any of the variables is a function pointer, or other Matlab specific
+ * object, it will be passed. Most integral types will be parsed successfully.
+ * Matlab matrices will be converted to OpenCV matrices of the same type.
+ * Note: Matlab stores images in RGB format whereas OpenCV stores images in
+ * BGR format, so if displaying a parsed image using cv::imshow(), the
+ * colours will be inverted.
+ * @return a vector of containers storing the name and data of each variable
+ * in the file
+ */
 std::vector<MatlabIOContainer> MatlabIO::read(void) {
 
     // allocate the output
@@ -501,7 +648,12 @@ std::vector<MatlabIOContainer> MatlabIO::read(void) {
     return variables;
 }
 
-
+/*! @brief Print a formatted list of the contents of a file
+ *
+ * Similar to the 'whos' function in matlab, this function prints to stdout
+ * a list of variables and their C++ datatypes stored in the associated .Mat file
+ * @param variables the variables read from the .Mat file using the read() function
+ */
 void MatlabIO::whos(vector<MatlabIOContainer> variables) const {
 
 	printf("-------------------------\n");
