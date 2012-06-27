@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2009, Willow Garage, Inc.
+ *  Copyright (c) 2012, Willow Garage, Inc.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -37,43 +37,103 @@
 #include <string>
 #include <vector>
 #include <cstdio>
+#include <fstream>
 #include <iostream>
+#include <zlib.h>
 #include <opencv2/core/core.hpp>
 #include "MatlabIOContainer.hpp"
+#include "esfstream.hpp"
+
 //#include "hdf5.h"
 class MatlabIO {
 private:
     // member variables
     static const int HEADER_LENGTH  = 116;
     static const int SUBSYS_LENGTH  = 8;
-    static const int VERSION_LENGTH = 1;
-    static const int ENDIAN_LENGTH  = 1;
+    static const int ENDIAN_LENGTH  = 2;
     char header_[HEADER_LENGTH+1];
-    char subsys_[SUBSYS_LENGTH];
-    int16_t version_[VERSION_LENGTH];
-    int16_t endian_[ENDIAN_LENGTH];
-    string filename_;
-    FILE *fid_;
+    char subsys_[SUBSYS_LENGTH+1];
+    char endian_[ENDIAN_LENGTH+1];
+    int16_t version_;
+    bool byte_swap_;
+    int bytes_read_;
+    std::string filename_;
+    esfstream fid_;
     // internal methods
     void getHeader(void);
     void setHeader(void);
-    MatlabIOContainer readVariable(void);
+    bool hasVariable(void) { return fid_.peek() != EOF; }
+    template<class T> T swapEndian(const T &t);
+    template<class T> std::vector<T> swapEndian(const std::vector<T> &t);
+	template<class T> MatlabIOContainer constructMatrix(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real, std::vector<char>& imag, uint32_t stor_type);
+	MatlabIOContainer constructString(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real);
+	MatlabIOContainer constructSparse(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real, std::vector<char>& imag);
+	MatlabIOContainer constructCell(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real);
+	MatlabIOContainer constructStruct(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real);
+	const char * readVariableTag(uint32_t &data_type, uint32_t &dbytes, uint32_t &wbytes, const char *data);
+	MatlabIOContainer collateMatrixFields(uint32_t data_type, uint32_t nbytes, std::vector<char> data);
+	std::vector<char> uncompressVariable(uint32_t& data_type, uint32_t& dbytes, uint32_t& wbytes, const std::vector<char> &data);
+    MatlabIOContainer readVariable(uint32_t data_type, uint32_t nbytes, const std::vector<char> &data);
+    MatlabIOContainer readBlock(void);
+    MatlabIOContainer uncompressFromBin(std::vector<char> data, uint32_t nbytes);
+    template<class T> MatlabIOContainer primitiveFromBin(std::vector<char> data, uint32_t nbytes);
 public:
     // constructors
     MatlabIO() {}
     // destructor
-    ~MatlabIO() {}
+    ~MatlabIO() { close(); }
     // get and set methods
-    void filename(void) { return filename_; }
+    std::string filename(void) { return std::string(filename_); }
     // read and write routines
-    bool open(string filename, string mode);
+    bool open(std::string filename, std::string mode);
     bool close(void);
     std::vector<MatlabIOContainer> read(void);
 
     // templated functions (must be declared and defined in the header file)
     //template<class T> bool write(const T variable);
     //template<class T> bool write(const std::vector<MatlabIOContainer> variables);
-    template<class T> T read(const string var_name);
+    template<class T> T read(const std::string var_name);
+};
+
+enum {
+    MAT_INT8       = 1,
+    MAT_UINT8      = 2,
+    MAT_INT16      = 3,
+    MAT_UINT16     = 4,
+    MAT_INT32      = 5,
+    MAT_UINT32     = 6,
+    MAT_FLOAT      = 7,
+    MAT_DOUBLE     = 9,
+    MAT_INT64      = 12,
+    MAT_UINT64     = 13,
+    MAT_MATRIX     = 14,
+    MAT_COMPRESSED = 15,
+    MAT_UTF8       = 16,
+    MAT_UTF16      = 17,
+    MAT_UTF32      = 18
+};
+
+enum {
+	MAT_CELL_CLASS 	   = 1,
+	MAT_STRUCT_CLASS   = 2,
+	MAT_OBJECT_CLASS   = 3,
+	MAT_CHAR_CLASS     = 4,
+	MAT_SPARSE_CLASS   = 5,
+	MAT_DOUBLE_CLASS   = 6,
+	MAT_FLOAT_CLASS    = 7,
+	MAT_INT8_CLASS     = 8,
+	MAT_UINT8_CLASS    = 9,
+	MAT_INT16_CLASS    = 10,
+	MAT_UINT16_CLASS   = 11,
+	MAT_INT32_CLASS    = 12,
+	MAT_UINT32_CLASS   = 13,
+	MAT_INT64_CLASS    = 14,
+	MAT_UINT64_CLASS   = 15
+};
+
+enum {
+    VERSION_5      = 5,
+    VERSION_73     = 73
 };
 
 #endif

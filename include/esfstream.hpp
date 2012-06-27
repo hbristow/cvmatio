@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2012, Willow Garage, Inc.
+ *  Copyright (c) 2009, Willow Garage, Inc.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -32,30 +32,43 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef MATLABIOCONTAINER_HPP_
-#define MATLABIOCONTAINER_HPP_
-#include <string>
-#include <typeinfo>
-#include <boost/any.hpp>
-    
-class MatlabIOContainer {
-private: 
-    std::string name_;
-    boost::any data_;
+#ifndef EFSTREAM_HPP_
+#define EFSTREAM_HPP_
+
+#include <fstream>
+#include <algorithm>
+
+/* esfstream
+ * Endian-Swap File Stream
+ * fstream subclass with ability to do byte swapping
+ * (change endiannes) of the incoming stream upon
+ * a read request
+ */
+class esfstream : public std::fstream {
+private:
+    bool byte_swap_;
 public:
-    // constructors
-    MatlabIOContainer() {}
-    MatlabIOContainer(const std::string name, const boost::any data) : name_(name), data_(data) {}
-    // destructor
-    ~MatlabIOContainer() {}
-    // set methods
-    void setName(const std::string name) { name_ = name; }
-    void setData(const boost::any data) { data_ = data; }
-    // get methods
-    template<class T> bool typeEquals(void) const { return data_.type() == typeid(T); }
-    std::string type(void) const { return data_.type().name(); }
-    std::string name(void) const { return name_; }
-    template<class T> T data(void) const { return boost::any_cast<T>(data_); }
+    // default constructor
+    esfstream() : byte_swap_(false) {}
+
+    // get and set byte swap methods
+    bool byteSwap(void) { return byte_swap_; }
+    void setByteSwap(bool state) { byte_swap_ = state; }
+
+    // method to swap the Endianness of a stream
+    void swapEndian(char *s, std::streamsize N) {
+        for (int n = 0; n < N; n+=2) std::swap(s[n], s[n+1]);
+    }
+
+    // overloaded fstream read method with 
+    // byte swapping capacity
+    std::istream& read(char *s, std::streamsize n) {
+        // call the parent read
+        std::istream& stream = std::fstream::read(s,n);
+        // swap the endianness if necessary
+        if (byte_swap_ && n%2 == 0) swapEndian(s,n);
+        return stream;
+    }
 };
 
 #endif
