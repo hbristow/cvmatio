@@ -149,8 +149,9 @@ struct TypeName<cv::Mat> {
 	static const std::string toString() { return "cv::Mat"; }
 };
 
-static const std::string toString(int cvtype) {
-	switch (cvtype) {
+static const std::string toString(int type) {
+	switch (type) {
+		// OpenCV internal types
 		case CV_8U:  return TypeName<uint8_t>::toString();
 		case CV_8S:  return TypeName<int8_t>::toString();
 		case CV_16U: return TypeName<uint16_t>::toString();

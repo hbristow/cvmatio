@@ -58,10 +58,12 @@ int main(int argc, char **argv) {
     // close the file
     matio.close();
 
-    Mat gray;
-    Mat im;
+    // display the file info
+    matio.whos(variables);
 
     // search for a variable named "im" and "gray"
+    Mat gray;
+    Mat im;
     for (int n = 0; n < variables.size(); ++n) {
     	if (variables[n].name().compare("im") == 0) {
     		im = variables[n].data<Mat>();

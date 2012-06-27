@@ -43,6 +43,7 @@ using namespace cv;
 bool MatlabIO::open(string filename, string mode) {
 
     // open the file
+	filename_ = filename;
     if (mode.compare("r") == 0) fid_.open(filename.c_str(), fstream::in  | fstream::binary);
     if (mode.compare("w") == 0) fid_.open(filename.c_str(), fstream::out | fstream::binary);
     return !fid_.fail();
@@ -498,4 +499,17 @@ std::vector<MatlabIOContainer> MatlabIO::read(void) {
         variables.push_back(variable);
     }
     return variables;
+}
+
+
+void MatlabIO::whos(vector<MatlabIOContainer> variables) const {
+
+	printf("-------------------------\n");
+	printf("File: %s\n", filename_.c_str());
+	printf("%s\n", header_);
+	printf("Variables:\n");
+	for (int n = 0; n < variables.size(); ++n) {
+		printf("%s:  %s\n", variables[n].name().c_str(), variables[n].type().c_str());
+	}
+	printf("-------------------------\n");
 }

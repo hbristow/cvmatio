@@ -43,6 +43,7 @@
 #include <opencv2/core/core.hpp>
 #include "MatlabIOContainer.hpp"
 #include "esfstream.hpp"
+#include "typetraits.hpp"
 
 //#include "hdf5.h"
 class MatlabIO {
@@ -93,42 +94,8 @@ public:
     //template<class T> bool write(const T variable);
     //template<class T> bool write(const std::vector<MatlabIOContainer> variables);
     template<class T> T read(const std::string var_name);
-};
 
-enum {
-    MAT_INT8       = 1,
-    MAT_UINT8      = 2,
-    MAT_INT16      = 3,
-    MAT_UINT16     = 4,
-    MAT_INT32      = 5,
-    MAT_UINT32     = 6,
-    MAT_FLOAT      = 7,
-    MAT_DOUBLE     = 9,
-    MAT_INT64      = 12,
-    MAT_UINT64     = 13,
-    MAT_MATRIX     = 14,
-    MAT_COMPRESSED = 15,
-    MAT_UTF8       = 16,
-    MAT_UTF16      = 17,
-    MAT_UTF32      = 18
-};
-
-enum {
-	MAT_CELL_CLASS 	   = 1,
-	MAT_STRUCT_CLASS   = 2,
-	MAT_OBJECT_CLASS   = 3,
-	MAT_CHAR_CLASS     = 4,
-	MAT_SPARSE_CLASS   = 5,
-	MAT_DOUBLE_CLASS   = 6,
-	MAT_FLOAT_CLASS    = 7,
-	MAT_INT8_CLASS     = 8,
-	MAT_UINT8_CLASS    = 9,
-	MAT_INT16_CLASS    = 10,
-	MAT_UINT16_CLASS   = 11,
-	MAT_INT32_CLASS    = 12,
-	MAT_UINT32_CLASS   = 13,
-	MAT_INT64_CLASS    = 14,
-	MAT_UINT64_CLASS   = 15
+    void whos(std::vector<MatlabIOContainer> variables) const;
 };
 
 enum {

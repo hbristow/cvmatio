@@ -37,7 +37,14 @@
 #include <string>
 #include <typeinfo>
 #include <boost/any.hpp>
-    
+
+/*! @class MatlabIOContainer
+ *  @brief A container class for storing type agnostic variables
+ *
+ *  MatlabIOContainer stores variables of any type using the boost::any type.
+ *  This allows multiple MatlabIOContainers to be stored in a single vector
+ *  when reading multiple variables from a file or constructing a Matlab struct.
+ */
 class MatlabIOContainer {
 private: 
     std::string name_;
@@ -45,6 +52,11 @@ private:
 public:
     // constructors
     MatlabIOContainer() {}
+    /*! @brief constructor
+     *
+     * @param name the string name of the variable
+     * @param data the associated data, of any type
+     */
     MatlabIOContainer(const std::string name, const boost::any data) : name_(name), data_(data) {}
     // destructor
     ~MatlabIOContainer() {}
