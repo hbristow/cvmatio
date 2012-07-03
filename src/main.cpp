@@ -31,6 +31,9 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
+ *  File:    main.cpp
+ *  Author:  Hilton Bristow
+ *  Created: Jun 27, 2012
  */
 
 /*! \mainpage Matlab Mat File Parser for C++ OpenCV
@@ -56,6 +59,7 @@ int main(int argc, char **argv) {
 
     // get the Matlab .Mat file from the command line
     string filename(argv[1]);
+    namedWindow("image");
 
     // create a new reader
     MatlabIO matio;
@@ -71,6 +75,7 @@ int main(int argc, char **argv) {
 
     // display the file info
     matio.whos(variables);
+    waitKey();
 
     // search for a variable named "im" and "gray"
     Mat gray;
@@ -85,7 +90,7 @@ int main(int argc, char **argv) {
     	}
     }
 
-    imshow("im", gray);
+    imshow("image", im);
     waitKey(0);
     return 0;
 }

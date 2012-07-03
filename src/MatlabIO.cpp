@@ -31,6 +31,9 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
+ *  File:    MatlabIO.cpp
+ *  Author:  Hilton Bristow
+ *  Created: Jun 27, 2012
  */
 #include <vector>
 #include <cerrno>
@@ -134,14 +137,14 @@ void MatlabIO::getHeader(void) {
     // turn on byte swapping if necessary
     fid_.setByteSwap(byte_swap_);
 
-    printf("Header: %s\nSubsys: %s\nVersion: %d\nEndian: %s\nByte Swap: %d\n", header_, subsys_, version_, endian_, byte_swap_);
+    //printf("Header: %s\nSubsys: %s\nVersion: %d\nEndian: %s\nByte Swap: %d\n", header_, subsys_, version_, endian_, byte_swap_);
     bytes_read_ = 128;
 }
 
 
 MatlabIOContainer MatlabIO::uncompressFromBin(vector<char> data, uint32_t nbytes) {
 
-    printf("I am a: compressed matrix\n");
+    //printf("I am a: compressed matrix\n");
     MatlabIOContainer variable;
     return variable;
 }
@@ -150,7 +153,7 @@ template<class T>
 MatlabIOContainer MatlabIO::primitiveFromBin(vector<char> data, uint32_t nbytes) {
 
 
-    printf("I am a: %s\n", typeid(T).name());
+    //printf("I am a: %s\n", typeid(T).name());
     MatlabIOContainer variable;
     return variable;
 }
@@ -174,10 +177,11 @@ const char * MatlabIO::readVariableTag(uint32_t &data_type, uint32_t &dbytes, ui
 	bool small = false;
     const uint32_t *datai = reinterpret_cast<const uint32_t *>(data);
     data_type = datai[0];
-    printf("Small format?: %x\n", data_type >> 16 != 0);
+
+    //printf("Small format?: %x\n", data_type >> 16 != 0);
     if ((data_type >> 16) != 0) {
         // small data format
-        printf("Casting to small format...\n");
+        //printf("Casting to small format...\n");
         dbytes = data_type >> 16;
         data_type = (data_type << 16) >> 16;
         small = true;
@@ -189,7 +193,8 @@ const char * MatlabIO::readVariableTag(uint32_t &data_type, uint32_t &dbytes, ui
     // get the whole number of bytes (wbytes) consumed by this variable, including header and padding
     if (small) wbytes = 8;
     else if (data_type == MAT_COMPRESSED) wbytes = 8 + dbytes;
-    else wbytes = 8 + dbytes + (dbytes % 8);
+    else wbytes = 8 + dbytes + ((8-dbytes) % 8);
+    //printf("Padding: %d\n", ((8-dbytes) % 8)); }
 
     // return the seek head positioned over the data payload
     return data + (small ? 4 : 8);
@@ -206,6 +211,46 @@ const char * MatlabIO::readVariableTag(uint32_t &data_type, uint32_t &dbytes, ui
 MatlabIOContainer MatlabIO::constructStruct(vector<char>& name, vector<int32_t>& dims, vector<char>& real) {
 
 	vector<MatlabIOContainer> strct;
+	const char* real_ptr = &(real[0]);
+	// get the length of each field
+	uint32_t length_type;
+	uint32_t length_dbytes;
+	uint32_t length_wbytes;
+	const char* length_ptr = readVariableTag(length_type, length_dbytes, length_wbytes, real_ptr);
+	uint32_t length = reinterpret_cast<const uint32_t*>(length_ptr)[0];
+
+	// get the total number of fields
+	uint32_t nfields_type;
+	uint32_t nfields_dbytes;
+	uint32_t nfields_wbytes;
+	const char* nfields_ptr = readVariableTag(nfields_type, nfields_dbytes, nfields_wbytes, real_ptr+length_wbytes);
+	//printf("nfields_dbytes: %d,   length_bytes: %d\n", nfields_dbytes, length);
+	assert((nfields_dbytes % length) == 0);
+	uint32_t nfields = nfields_dbytes / length;
+
+	// populate a vector of field names
+	vector<string> field_names;
+	for (int n = 0; n < nfields; ++n) {
+		field_names.push_back(string(nfields_ptr+(n*length)));
+		//printf("Field name: %s\n", field_names[n].c_str());
+	}
+
+	// iterate through each of the cells and construct the matrices
+	const char* field_ptr = real_ptr+length_wbytes+nfields_wbytes;
+	for (int n = 0; n < nfields; ++n) {
+
+		MatlabIOContainer field;
+		uint32_t data_type;
+		uint32_t dbytes;
+		uint32_t wbytes;
+		const char* data_ptr = readVariableTag(data_type, dbytes, wbytes, field_ptr);
+		assert(data_type == MAT_MATRIX);
+		field = collateMatrixFields(data_type, dbytes, vector<char>(data_ptr, data_ptr+dbytes));
+		field.setName(field_names[n]);
+		strct.push_back(field);
+		field_ptr += wbytes;
+	}
+
 	return MatlabIOContainer(string(&(name[0])), strct);
 }
 
@@ -225,6 +270,7 @@ MatlabIOContainer MatlabIO::constructStruct(vector<char>& name, vector<int32_t>&
  */
 MatlabIOContainer MatlabIO::constructCell(vector<char>& name, vector<int32_t>& dims, vector<char>& real) {
 
+	//printf("--------------------\nInterpreting cell contents...\n"); fflush(stdout);
 	vector<MatlabIOContainer> cell;
 	char* field_ptr = &(real[0]);
 	for (int n = 0; n < product<int32_t>(dims); ++n) {
@@ -233,6 +279,8 @@ MatlabIOContainer MatlabIO::constructCell(vector<char>& name, vector<int32_t>& d
 		uint32_t dbytes;
 		uint32_t wbytes;
 		const char* data_ptr = readVariableTag(data_type, dbytes, wbytes, field_ptr);
+		//printf("cell data_type: %d,  dbytes: %d\n", data_type, dbytes);
+		assert(data_type == MAT_MATRIX);
 		field = collateMatrixFields(data_type, dbytes, vector<char>(data_ptr, data_ptr+dbytes));
 		cell.push_back(field);
 		field_ptr += wbytes;
@@ -412,12 +460,12 @@ MatlabIOContainer MatlabIO::collateMatrixFields(uint32_t data_type, uint32_t nby
     uint32_t dim_wbytes;
     const char* dim_data = readVariableTag(dim_type, dim_dbytes, dim_wbytes, &(data[pre_wbytes]));
     vector<int32_t> dims(reinterpret_cast<const int32_t *>(dim_data), reinterpret_cast<const int32_t *>(dim_data+dim_dbytes));
-    printf("Complex?: %d\n", complx);
-    printf("Logical?: %d\n", logical);
-    printf("Dimensions: ");
-    for(int n = 0; n < dims.size(); ++n) printf("%d  ", dims[n]);
-    printf("\n");
-    printf("Dim bytes: %d\n", dim_dbytes);
+    //printf("Complex?: %d\n", complx);
+    //printf("Logical?: %d\n", logical);
+    //printf("Dimensions: ");
+    //for(int n = 0; n < dims.size(); ++n) printf("%d  ", dims[n]);
+    //printf("\n");
+    //printf("Dim bytes: %d\n", dim_dbytes);
 
     // get the variable name
     uint32_t name_type;
@@ -426,7 +474,16 @@ MatlabIOContainer MatlabIO::collateMatrixFields(uint32_t data_type, uint32_t nby
     const char* name_data = readVariableTag(name_type, name_dbytes, name_wbytes, &(data[pre_wbytes+dim_wbytes]));
     vector<char> name(name_data, name_data+name_dbytes);
     name.push_back('\0');
-    printf("The variable name is: %s\n", &(name[0]));
+    //printf("The variable name is: %s\n", &(name[0]));
+
+    // if the encoded data type is a cell array, bail out now
+    if (enc_data_type == MAT_CELL_CLASS) {
+    	vector<char> real(data.begin() + pre_wbytes+dim_wbytes+name_wbytes, data.end());
+    	return constructCell(name, dims, real);
+    } else if (enc_data_type == MAT_STRUCT_CLASS) {
+    	vector<char> real(data.begin() + pre_wbytes+dim_wbytes+name_wbytes, data.end());
+    	return constructStruct(name, dims, real);
+    }
 
     // get the real data
     uint32_t real_type;
@@ -434,7 +491,8 @@ MatlabIOContainer MatlabIO::collateMatrixFields(uint32_t data_type, uint32_t nby
     uint32_t real_wbytes;
     const char* real_data = readVariableTag(real_type, real_dbytes, real_wbytes, &(data[pre_wbytes+dim_wbytes+name_wbytes]));
     vector<char> real(real_data,real_data+real_dbytes);
-    printf("The variable type is: %d\n", enc_data_type);
+    //printf("The variable type is: %d\n", enc_data_type);
+    //printf("Total number of bytes in data segment: %d\n", real_dbytes);
 
     vector<char> imag;
     if (complx) {
@@ -464,9 +522,6 @@ MatlabIOContainer MatlabIO::collateMatrixFields(uint32_t data_type, uint32_t nby
         case MAT_CHAR_CLASS:      variable = constructString(name, dims, real); break;
         // sparse types
         case MAT_SPARSE_CLASS:    variable = constructSparse(name, dims, real, imag); break;
-        // recursive types
-        case MAT_CELL_CLASS:	  variable = constructCell(name, dims, real); break;
-        case MAT_STRUCT_CLASS:	  variable = constructStruct(name, dims, real); break;
         // non-handled types
         case MAT_OBJECT_CLASS:	  break;
         default: 				  break;
@@ -495,7 +550,6 @@ vector<char> MatlabIO::uncompressVariable(uint32_t& data_type, uint32_t& dbytes,
     infstream.zfree  = Z_NULL;
     infstream.opaque = Z_NULL;
     int ok = inflateInit(&infstream);
-    printf("Inflate init: %d\n", ok == Z_OK);
 
     // inflate the variable header
     infstream.avail_in = data.size();
@@ -503,7 +557,6 @@ vector<char> MatlabIO::uncompressVariable(uint32_t& data_type, uint32_t& dbytes,
     infstream.avail_out = 8;
     infstream.next_out = (unsigned char *)&buf;
     ok = inflate(&infstream, Z_NO_FLUSH);
-    printf("Inflation: %d\n", data.size());
 
     // get the headers
     readVariableTag(data_type, dbytes, wbytes, buf);
@@ -537,6 +590,7 @@ MatlabIOContainer MatlabIO::readVariable(uint32_t data_type, uint32_t nbytes, co
     // interpret the data
     MatlabIOContainer variable;
     switch (data_type) {
+    /*
         case MAT_INT8:      variable = primitiveFromBin<int8_t>(data, nbytes); break; 
         case MAT_UINT8:     variable = primitiveFromBin<uint8_t>(data, nbytes); break;
         case MAT_INT16:     variable = primitiveFromBin<int16_t>(data, nbytes); break;
@@ -550,6 +604,7 @@ MatlabIOContainer MatlabIO::readVariable(uint32_t data_type, uint32_t nbytes, co
         case MAT_UTF8:      variable = primitiveFromBin<char>(data, nbytes); break;
         case MAT_UTF16:     break;
         case MAT_UTF32:     break;
+    */
         case MAT_COMPRESSED:
         {
             // uncompress the data
@@ -568,7 +623,6 @@ MatlabIOContainer MatlabIO::readVariable(uint32_t data_type, uint32_t nbytes, co
         }
         default: break;
     }
-    printf("Read variable:\nData Type: %d, bytes: %d\n", data_type, nbytes); fflush(stdout);
     return variable;
 }
 
@@ -598,7 +652,7 @@ MatlabIOContainer MatlabIO::readBlock(void) {
     readVariableTag(data_type, dbytes, wbytes, buf);
 
     // read the binary data block
-    printf("\nReading binary data block...\n"); fflush(stdout);
+    //printf("\nReading binary data block...\n"); fflush(stdout);
     char *data_tmp = new char[dbytes];
     fid_.read(data_tmp, sizeof(char)*dbytes);
     vector<char> data(data_tmp, data_tmp+dbytes);
@@ -607,7 +661,7 @@ MatlabIOContainer MatlabIO::readBlock(void) {
     // move the seek head position to the next 64-bit boundary
     // (but only if the data is uncompressed. Saving yet another 8 tiny bytes...)
     if (data_type != MAT_COMPRESSED) {
-        printf("Aligning seek head to next 64-bit boundary...\n");
+        //printf("Aligning seek head to next 64-bit boundary...\n");
         streampos head_pos = fid_.tellg();
         int padding = head_pos % 8;
         fid_.seekg(padding, fstream::cur);
@@ -656,12 +710,16 @@ std::vector<MatlabIOContainer> MatlabIO::read(void) {
  */
 void MatlabIO::whos(vector<MatlabIOContainer> variables) const {
 
+	// get the longest filename
+	int flmax = 0;
+	for (int n = 0; n < variables.size(); ++n) if(variables[n].name().length() > flmax) flmax = variables[n].name().length();
+
 	printf("-------------------------\n");
 	printf("File: %s\n", filename_.c_str());
 	printf("%s\n", header_);
 	printf("Variables:\n");
 	for (int n = 0; n < variables.size(); ++n) {
-		printf("%s:  %s\n", variables[n].name().c_str(), variables[n].type().c_str());
+		printf("%*s:  %s\n", flmax, variables[n].name().c_str(), variables[n].type().c_str());
 	}
 	printf("-------------------------\n");
 }

@@ -14,6 +14,7 @@ USE_PDFLATEX            = YES
 # INTERNAL
 QUIET                   = YES
 WARNINGS                = NO
+WARN_IF_UNDOCUMENTED    = NO
 PDF_HYPERLINKS          = YES
 OPTIMIZE_OUTPUT_FOR_C   = YES
 EXTRACT_PRIVATE         = YES

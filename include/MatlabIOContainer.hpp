@@ -31,6 +31,9 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
+ *  File:    MatlabIOContainer.hpp
+ *  Author:  Hilton Bristow
+ *  Created: Jun 27, 2012
  */
 #ifndef MATLABIOCONTAINER_HPP_
 #define MATLABIOCONTAINER_HPP_

@@ -31,6 +31,9 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
+ *  File:    MatlabIO.hpp
+ *  Author:  Hilton Bristow
+ *  Created: Jun 27, 2012
  */
 
 #ifndef MATLABIO_HPP_
@@ -43,8 +46,14 @@
 #include <zlib.h>
 #include <opencv2/core/core.hpp>
 #include "MatlabIOContainer.hpp"
-#include "esfstream.hpp"
+#include "EFStream.hpp"
 #include "typetraits.hpp"
+
+
+enum {
+    VERSION_5      = 5,
+    VERSION_73     = 73
+};
 
 /*! @class MatlabIO
  *  @brief Matlab Mat file parser for C++ OpenCV
@@ -68,7 +77,7 @@ private:
     bool byte_swap_;
     int bytes_read_;
     std::string filename_;
-    esfstream fid_;
+    EFStream fid_;
     // internal methods
     void getHeader(void);
     void setHeader(void);
@@ -105,9 +114,6 @@ public:
     void whos(std::vector<MatlabIOContainer> variables) const;
 };
 
-enum {
-    VERSION_5      = 5,
-    VERSION_73     = 73
-};
+
 
 #endif
