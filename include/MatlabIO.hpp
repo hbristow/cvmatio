@@ -87,7 +87,7 @@ private:
 	MatlabIOContainer constructSparse(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real, std::vector<char>& imag);
 	MatlabIOContainer constructCell(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real);
 	MatlabIOContainer constructStruct(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real);
-	const char * readVariableTag(uint32_t &data_type, uint32_t &dbytes, uint32_t &wbytes, const char *data);
+	const char *      readVariableTag(uint32_t &data_type, uint32_t &dbytes, uint32_t &wbytes, const char *data);
 	MatlabIOContainer collateMatrixFields(uint32_t data_type, uint32_t nbytes, std::vector<char> data);
 	std::vector<char> uncompressVariable(uint32_t& data_type, uint32_t& dbytes, uint32_t& wbytes, const std::vector<char> &data);
     MatlabIOContainer readVariable(uint32_t data_type, uint32_t nbytes, const std::vector<char> &data);
@@ -105,15 +105,16 @@ public:
     bool open(std::string filename, std::string mode);
     bool close(void);
     std::vector<MatlabIOContainer> read(void);
+    void whos(std::vector<MatlabIOContainer> variables) const;
 
     // templated functions (must be declared and defined in the header file)
-    //template<class T> bool write(const T variable);
-    //template<class T> bool write(const std::vector<MatlabIOContainer> variables);
-    template<class T> T read(const std::string var_name);
-
-    void whos(std::vector<MatlabIOContainer> variables) const;
+    template<class T>
+    T find(std::vector<MatlabIOContainer>& variables, std::string name) const {
+    	for (int n = 0; n < variables.size(); ++n) {
+    		if (variables[n].name().compare(name) == 0) return variables[n].data<T>();
+    	}
+    	throw new std::exception();
+    }
 };
 
-
-
-#endif
+#endif /* MATLABIO_HPP_ */

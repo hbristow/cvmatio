@@ -4,7 +4,7 @@ project(MatlabIO)
 
 # -----------------------------------------------
 # USER-DEFINED VARIABLES
-option(BUILD_EXECUTABLE "Build as executable to test functionality" ON)
+option(BUILD_EXECUTABLE "Build as executable to test functionality" OFF)
 option(BUILD_DOC        "Build documentation with Doxygen"          ON)
 
 

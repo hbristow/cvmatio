@@ -39,6 +39,7 @@
 #include <cerrno>
 #include <cstring>
 #include <zlib.h>
+#include <exception>
 #include "MatlabIO.hpp"
 using namespace std;
 using namespace cv;
