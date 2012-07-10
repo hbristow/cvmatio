@@ -87,6 +87,29 @@ T product(const vector<T>& vec) {
 	return acc;
 }
 
+/*! @brief transpose a multi-channel matrix
+ *
+ * The OpenCV builtin transpose method cannot tranpose multi-dimensional
+ * matrices. This function provides that capability by splitting the matrix
+ * into a vector of its channels, tranposing each channel, then merging
+ * the result back into a single multi-channel matrix
+ *
+ * @param src the input matrix
+ * @param dst the output matrix, where dst(i,j,k) == src(j,i,k)
+ */
+void transposeMat(const Mat& src, Mat& dst) {
+	if (src.channels() > 1) {
+		vector<Mat> vec;
+		split(src, vec);
+		for (int n = 0; n < vec.size(); ++n) {
+			transpose(vec[n], vec[n]);
+		}
+		merge(vec, dst);
+	} else {
+		transpose(src, dst);
+	}
+}
+
 /*! @brief convert the type of a variable
  *
  * Given a vector of type char, interpret the data as an
@@ -211,7 +234,7 @@ const char * MatlabIO::readVariableTag(uint32_t &data_type, uint32_t &dbytes, ui
  */
 MatlabIOContainer MatlabIO::constructStruct(vector<char>& name, vector<int32_t>& dims, vector<char>& real) {
 
-	vector<MatlabIOContainer> strct;
+	vector<vector<MatlabIOContainer> > array;
 	const char* real_ptr = &(real[0]);
 	// get the length of each field
 	uint32_t length_type;
@@ -238,21 +261,24 @@ MatlabIOContainer MatlabIO::constructStruct(vector<char>& name, vector<int32_t>&
 
 	// iterate through each of the cells and construct the matrices
 	const char* field_ptr = real_ptr+length_wbytes+nfields_wbytes;
-	for (int n = 0; n < nfields; ++n) {
+	for (int m = 0; m < product<int32_t>(dims); ++m) {
+		vector<MatlabIOContainer> strct;
+		for (int n = 0; n < nfields; ++n) {
 
-		MatlabIOContainer field;
-		uint32_t data_type;
-		uint32_t dbytes;
-		uint32_t wbytes;
-		const char* data_ptr = readVariableTag(data_type, dbytes, wbytes, field_ptr);
-		assert(data_type == MAT_MATRIX);
-		field = collateMatrixFields(data_type, dbytes, vector<char>(data_ptr, data_ptr+dbytes));
-		field.setName(field_names[n]);
-		strct.push_back(field);
-		field_ptr += wbytes;
+			MatlabIOContainer field;
+			uint32_t data_type;
+			uint32_t dbytes;
+			uint32_t wbytes;
+			const char* data_ptr = readVariableTag(data_type, dbytes, wbytes, field_ptr);
+			assert(data_type == MAT_MATRIX);
+			field = collateMatrixFields(data_type, dbytes, vector<char>(data_ptr, data_ptr+dbytes));
+			field.setName(field_names[n]);
+			strct.push_back(field);
+			field_ptr += wbytes;
+		}
+		array.push_back(strct);
 	}
-
-	return MatlabIOContainer(string(&(name[0])), strct);
+	return MatlabIOContainer(string(&(name[0])), array);
 }
 
 /*! @brief construct a cell array
@@ -424,7 +450,7 @@ MatlabIOContainer MatlabIO::constructMatrix(vector<char>& name, vector<int32_t>&
 	mat = flat.reshape(flat.channels(), dims[1]);
 
 	// transpose the matrix since matlab stores them in column major ordering
-	transpose(mat, mat);
+	transposeMat(mat, mat);
 
 	return MatlabIOContainer(string(&(name[0])), mat);
 }
@@ -723,4 +749,5 @@ void MatlabIO::whos(vector<MatlabIOContainer> variables) const {
 		printf("%*s:  %s\n", flmax, variables[n].name().c_str(), variables[n].type().c_str());
 	}
 	printf("-------------------------\n");
+	fflush(stdout);
 }

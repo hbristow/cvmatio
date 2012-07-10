@@ -39,7 +39,11 @@
 #define TYPETRAITS_HPP_
 
 #include <string>
+#include <vector>
+#include <typeinfo>
 #include <opencv2/core/core.hpp>
+class MatlabIOContainer;
+
 
 enum {
     MAT_INT8       = 1,
@@ -136,7 +140,7 @@ struct TypeName<double> {
 
 template <>
 struct TypeName<char> {
-	static const std::string toString() { return "std::string"; }
+	static const std::string toString() { return "string"; }
 };
 
 template <>
@@ -146,29 +150,33 @@ struct TypeName<bool> {
 
 template <>
 struct TypeName<cv::Mat> {
-	static const std::string toString() { return "cv::Mat"; }
+	static const std::string toString() { return "Mat"; }
 };
 
-static const std::string toString(int type) {
-	switch (type) {
-		// OpenCV internal types
-		case CV_8U:  return TypeName<uint8_t>::toString();
-		case CV_8S:  return TypeName<int8_t>::toString();
-		case CV_16U: return TypeName<uint16_t>::toString();
-		case CV_16S: return TypeName<int16_t>::toString();
-		case CV_32S: return TypeName<int32_t>::toString();
-		case CV_32F: return TypeName<float>::toString();
-		case CV_64F: return TypeName<double>::toString();
-		default: return "Unknown internal type";
-	}
-}
+template <>
+struct TypeName<MatlabIOContainer> {
+	static const std::string toString() { return "MatlabIOContainer"; }
+};
 
-template <typename T>
-static const std::string toString(T type) {
+template <>
+struct TypeName<std::vector<MatlabIOContainer> > {
+	static const std::string toString() { return "vector<MatlabIOContainer>"; }
+};
 
-	std::string str = TypeName<T>::toString();
-	if (typeid(T) == typeid(cv::Mat)) str.append("  ").append(type.type());
-	return str;
-}
+template <>
+struct TypeName<std::vector<std::vector<MatlabIOContainer> > > {
+	static const std::string toString() { return "vector<vector<MatlabIOContainer>>"; }
+};
+
+template <>
+struct TypeName<std::vector<cv::Mat> > {
+	static const std::string toString() { return "vector<Mat>"; }
+};
+
+template <>
+struct TypeName<void> {
+	static const std::string toString() { return "No stored value"; }
+};
+
 
 #endif /* TYPETRAITS_HPP_ */

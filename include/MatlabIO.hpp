@@ -115,6 +115,21 @@ public:
     	}
     	throw new std::exception();
     }
+
+    MatlabIOContainer find(std::vector<MatlabIOContainer>& variables, std::string name) const {
+    	for (int n = 0; n < variables.size(); ++n) {
+    		if (variables[n].name().compare(name) == 0) return variables[n];
+    	}
+    	throw new std::exception();
+    }
+
+    template<class T>
+    bool typeEquals(std::vector<MatlabIOContainer>& variables, std::string name) const {
+    	for (int n = 0; n < variables.size(); ++n) {
+    		if (variables[n].name().compare(name) == 0) return variables[n].typeEquals<T>();
+    	}
+    	return false;
+    }
 };
 
 #endif /* MATLABIO_HPP_ */

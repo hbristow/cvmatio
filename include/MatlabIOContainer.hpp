@@ -40,6 +40,7 @@
 #include <string>
 #include <typeinfo>
 #include <boost/any.hpp>
+#include "typetraits.hpp"
 
 /*! @class MatlabIOContainer
  *  @brief A container class for storing type agnostic variables
@@ -81,7 +82,23 @@ public:
      * compilers will not) but are guaranteed to be unique for unique types
      * @return the variable type as a string
      */
-    std::string type(void) const { return data_.type().name(); }
+    std::string type(void) const {
+    	const std::type_info& tp = data_.type();
+		if (tp == typeid(uint8_t)) return TypeName<uint8_t>::toString();
+		if (tp == typeid(int8_t))  return TypeName<int8_t>::toString();
+		if (tp == typeid(uint16_t)) return TypeName<uint16_t>::toString();
+		if (tp == typeid(int16_t)) return TypeName<int16_t>::toString();
+		if (tp == typeid(int32_t)) return TypeName<int32_t>::toString();
+		if (tp == typeid(float)) return TypeName<float>::toString();
+		if (tp == typeid(double)) return TypeName<double>::toString();
+		if (tp == typeid(cv::Mat)) return TypeName<cv::Mat>::toString();
+		if (tp == typeid(MatlabIOContainer)) return TypeName<MatlabIOContainer>::toString();
+		if (tp == typeid(std::vector<MatlabIOContainer>)) return TypeName<std::vector<MatlabIOContainer> >::toString();
+		if (tp == typeid(std::vector<std::vector<MatlabIOContainer> >)) return TypeName<std::vector<std::vector<MatlabIOContainer> > >::toString();
+		if (tp == typeid(std::vector<cv::Mat>)) return TypeName<std::vector<cv::Mat> >::toString();
+		if (tp == typeid(void)) return TypeName<void>::toString();
+		return std::string(tp.name());
+	}
     std::string name(void) const { return name_; }
     /*! @brief The stored data
      *
