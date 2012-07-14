@@ -1,15 +1,35 @@
 # MatlabIO CMakeLists.txt
 cmake_minimum_required(VERSION 2.8)
-project(MatlabIO)
 
 # -----------------------------------------------
 # USER-DEFINED VARIABLES
 option(BUILD_EXECUTABLE "Build as executable to test functionality" OFF)
 option(BUILD_DOC        "Build documentation with Doxygen"          ON)
 
+# --------------------
+# CATKIN
+if (catkin_FOUND)
+    project(cvmatio)
+    catkin_stack()
+    catkin_project(cvmatio
+                   DEPENDS Boost OpenCV
+                   INCLUDE_DIRS include
+    )
+    #install targets for all things python
+    catkin_python_setup()
+    find_package(ecto REQUIRED)
+    find_package(object_recognition_core REQUIRED)
+else()
+    project(MatlabIO)
+endif()
 
-
-set(PROJECT_ROOT ${PROJECT_SOURCE_DIR})
+# --------------------
+# COMMON
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING
+        "Choose the type of build. Options are: None, Debug, Release, RelWithDebInfo, MinSizeRel"
+    FORCE)
+endif()
 
 # find the dependencies
 find_package(Boost REQUIRED)
@@ -25,14 +45,14 @@ include_directories("include")
 # build the project
 if(BUILD_EXECUTABLE)
     set(SRC_FILES src/MatlabIO.cpp src/main.cpp)
-    add_executable(MatlabIO ${SRC_FILES})
+    add_executable(${PROJECT_NAME} ${SRC_FILES})
 else()
     set(SRC_FILES src/MatlabIO.cpp)
-    add_library(MatlabIO SHARED ${SRC_FILES})
+    add_library(${PROJECT_NAME} SHARED ${SRC_FILES})
 endif()
 
 #link
-target_link_libraries(MatlabIO ${Boost_LIBRARIES} ${OpenCV_LIBS} ${ZLIB_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${OpenCV_LIBS} ${ZLIB_LIBRARIES})
 
 # install the targets
 install(TARGETS MatlabIO RUNTIME DESTINATION ${PROJECT_SOURCE_DIR}/bin LIBRARY DESTINATION ${PROJECT_SOURCE_DIR}/lib)
@@ -42,8 +62,4 @@ if(BUILD_DOC)
     find_package(Doxygen)
     configure_file(${PROJECT_SOURCE_DIR}/doc/Doxyfile.in ${PROJECT_SOURCE_DIR}/doc/Doxyfile @ONLY)
     add_custom_target(doc ALL ${DOXYGEN_EXECUTABLE} ${PROJECT_SOURCE_DIR}/doc/Doxyfile)
-    add_custom_command(COMMAND make 
-        OUTPUT ${PROJECT_SOURCE_DIR}/doc/latex
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/doc/latex
-    )
 endif()
