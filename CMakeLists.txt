@@ -15,10 +15,6 @@ if (catkin_FOUND)
                    DEPENDS Boost OpenCV
                    INCLUDE_DIRS include
     )
-    #install targets for all things python
-    catkin_python_setup()
-    find_package(ecto REQUIRED)
-    find_package(object_recognition_core REQUIRED)
 else()
     project(MatlabIO)
 endif()
@@ -54,12 +50,9 @@ endif()
 #link
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${OpenCV_LIBS} ${ZLIB_LIBRARIES})
 
-# install the targets
-install(TARGETS MatlabIO RUNTIME DESTINATION ${PROJECT_SOURCE_DIR}/bin LIBRARY DESTINATION ${PROJECT_SOURCE_DIR}/lib)
-
 # build the doxygen pdf
 if(BUILD_DOC)
     find_package(Doxygen)
     configure_file(${PROJECT_SOURCE_DIR}/doc/Doxyfile.in ${PROJECT_SOURCE_DIR}/doc/Doxyfile @ONLY)
-    add_custom_target(doc ALL ${DOXYGEN_EXECUTABLE} ${PROJECT_SOURCE_DIR}/doc/Doxyfile)
+    add_custom_target(cvmatio_doc ALL ${DOXYGEN_EXECUTABLE} ${PROJECT_SOURCE_DIR}/doc/Doxyfile)
 endif()
