@@ -15,6 +15,7 @@ if (catkin_FOUND)
     catkin_project(cvmatio
                    DEPENDS Boost OpenCV
                    INCLUDE_DIRS include
+                   LIBRARIES cvmatio
     )
 else()
     project(MatlabIO)
@@ -34,9 +35,9 @@ find_package(OpenCV REQUIRED)
 include(FindZLIB)
 
 # include the dependencies
-include_directories(${OPENCV_INCLUDE_DIRS})
-include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${ZLIB_INCLUDE_DIR})
+include_directories(SYSTEM ${OPENCV_INCLUDE_DIRS}
+                           ${Boost_INCLUDE_DIRS}
+                           ${ZLIB_INCLUDE_DIR})
 include_directories("include")
 
 # build the project
