@@ -597,7 +597,7 @@ vector<char> MatlabIO::uncompressVariable(uint32_t& data_type, uint32_t& dbytes,
 
     // convert to a vector
     vector<char> udata(udata_tmp, udata_tmp+dbytes);
-    free(udata_tmp);
+    delete [] udata_tmp;
     return udata;
 
 }
@@ -683,7 +683,7 @@ MatlabIOContainer MatlabIO::readBlock(void) {
     char *data_tmp = new char[dbytes];
     fid_.read(data_tmp, sizeof(char)*dbytes);
     vector<char> data(data_tmp, data_tmp+dbytes);
-    free(data_tmp);
+    delete [] data_tmp;
 
     // move the seek head position to the next 64-bit boundary
     // (but only if the data is uncompressed. Saving yet another 8 tiny bytes...)
