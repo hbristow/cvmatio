@@ -5,10 +5,13 @@ cmake_minimum_required(VERSION 2.8)
 # USER-DEFINED VARIABLES
 option(BUILD_EXECUTABLE "Build as executable to test functionality" OFF)
 option(BUILD_DOC        "Build documentation with Doxygen"          ON)
+option(USE_CATKIN       "Build using Catkin"                        OFF)
 
 # --------------------
 # CATKIN
-find_package(catkin QUIET)
+if (USE_CATKIN)
+    find_package(catkin QUIET)
+endif()
 if (catkin_FOUND)
     project(cvmatio)
     catkin_stack()
@@ -18,7 +21,7 @@ if (catkin_FOUND)
                    LIBRARIES cvmatio
     )
 else()
-    project(MatlabIO)
+    project(cvmatio)
 endif()
 
 # --------------------
@@ -41,16 +44,7 @@ include_directories(SYSTEM ${OPENCV_INCLUDE_DIRS}
 include_directories("include")
 
 # build the project
-if(BUILD_EXECUTABLE)
-    set(SRC_FILES src/MatlabIO.cpp src/main.cpp)
-    add_executable(${PROJECT_NAME} ${SRC_FILES})
-else()
-    set(SRC_FILES src/MatlabIO.cpp)
-    add_library(${PROJECT_NAME} SHARED ${SRC_FILES})
-endif()
-
-#link
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${OpenCV_LIBS} ${ZLIB_LIBRARIES})
+add_subdirectory(src)
 
 # build the doxygen pdf
 if(BUILD_DOC)
