@@ -1,27 +1,22 @@
 # MatlabIO CMakeLists.txt
 cmake_minimum_required(VERSION 2.8)
+project(cvmatio)
 
 # -----------------------------------------------
 # USER-DEFINED VARIABLES
 option(BUILD_EXECUTABLE "Build as executable to test functionality" OFF)
 option(BUILD_DOC        "Build documentation with Doxygen"          ON)
-option(USE_CATKIN       "Build using Catkin"                        OFF)
 
 # --------------------
 # CATKIN
-if (USE_CATKIN)
-    find_package(catkin QUIET)
-endif()
+find_package(catkin QUIET)
 if (catkin_FOUND)
-    project(cvmatio)
     catkin_stack()
     catkin_project(cvmatio
                    DEPENDS Boost OpenCV
                    INCLUDE_DIRS include
                    LIBRARIES cvmatio
     )
-else()
-    project(cvmatio)
 endif()
 
 # --------------------
