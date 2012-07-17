@@ -428,7 +428,7 @@ MatlabIOContainer MatlabIO::constructMatrix(vector<char>& name, vector<int32_t>&
 	assert(vec_real.size() == numel);
 
 	// if the data is a scalar, don't write it to a matrix
-	if (vec_real.size() == 1 && vec_imag.size() == 0) return MatlabIOContainer(string(&(name[0])), vec_real[0]);
+	//if (vec_real.size() == 1 && vec_imag.size() == 0) return MatlabIOContainer(string(&(name[0])), vec_real[0]);
 
 	// get the number of channels
 	int channels = dims.size() == 3 ? dims[2] : 1;

@@ -1,16 +1,15 @@
 # MatlabIO CMakeLists.txt
 cmake_minimum_required(VERSION 2.8)
+project(cvmatio)
 
 # -----------------------------------------------
 # USER-DEFINED VARIABLES
 option(BUILD_EXECUTABLE "Build as executable to test functionality" OFF)
 option(BUILD_DOC        "Build documentation with Doxygen"          ON)
-option(USE_CATKIN       "Build using Catkin"                        OFF)
 
 # --------------------
 # CATKIN
-if (USE_CATKIN)
-    find_package(catkin QUIET)
+find_package(catkin QUIET)
 endif()
 if (catkin_FOUND)
     project(cvmatio)
@@ -20,14 +19,12 @@ if (catkin_FOUND)
                    INCLUDE_DIRS include
                    LIBRARIES cvmatio
     )
-else()
-    project(cvmatio)
 endif()
 
 # --------------------
 # COMMON
 if (NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug CACHE STRING
+    set(CMAKE_BUILD_TYPE Release CACHE STRING
         "Choose the type of build. Options are: None, Debug, Release, RelWithDebInfo, MinSizeRel"
     FORCE)
 endif()

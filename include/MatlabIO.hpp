@@ -111,7 +111,13 @@ public:
     template<class T>
     T find(std::vector<MatlabIOContainer>& variables, std::string name) const {
     	for (int n = 0; n < variables.size(); ++n) {
-    		if (variables[n].name().compare(name) == 0) return variables[n].data<T>();
+    		if (variables[n].name().compare(name) == 0) {
+    			if (isPrimitiveType<T>()) {
+    				return variables[n].data<cv::Mat>().at<T>(0);
+    			} else {
+    				return variables[n].data<T>();
+    			}
+    		}
     	}
     	throw new std::exception();
     }
@@ -129,6 +135,20 @@ public:
     		if (variables[n].name().compare(name) == 0) return variables[n].typeEquals<T>();
     	}
     	return false;
+    }
+
+    template<typename T>
+    bool isPrimitiveType(void) const {
+    	if (typeid(T) == typeid(uint8_t) || typeid(T) == typeid(int8_t) ||
+    		typeid(T) == typeid(uint16_t) || typeid(T) == typeid(int16_t) ||
+    		typeid(T) == typeid(uint32_t) || typeid(T) == typeid(int32_t) ||
+    		typeid(T) == typeid(float) || typeid(T) == typeid(double) ||
+    		typeid(T) == typeid(uchar) || typeid(T) == typeid(char) ||
+    		typeid(T) == typeid(bool)) {
+    		return true;
+    	} else {
+    		return false;
+    	}
     }
 };
 
