@@ -10,9 +10,7 @@ option(BUILD_DOC        "Build documentation with Doxygen"          ON)
 # --------------------
 # CATKIN
 find_package(catkin QUIET)
-endif()
 if (catkin_FOUND)
-    project(cvmatio)
     catkin_stack()
     catkin_project(cvmatio
                    DEPENDS Boost OpenCV
