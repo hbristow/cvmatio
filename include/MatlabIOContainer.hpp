@@ -41,6 +41,8 @@
 #include <typeinfo>
 #include <boost/any.hpp>
 #include "typetraits.hpp"
+typedef std::vector<MatlabIOContainer> vectorMatlabIOContainer;
+typedef std::vector<std::vector<MatlabIOContainer> > vector2DMatlabIOContainer;
 
 /*! @class MatlabIOContainer
  *  @brief A container class for storing type agnostic variables
@@ -49,7 +51,7 @@
  *  This allows multiple MatlabIOContainers to be stored in a single vector
  *  when reading multiple variables from a file or constructing a Matlab struct.
  */
-class MatlabIOContainer {
+class MatlabIOContainer : cv::FileNode {
 private: 
     std::string name_;
     boost::any data_;
@@ -107,6 +109,14 @@ public:
      * @return the data
      */
     template<class T> T data(void) const { return boost::any_cast<T>(data_); }
+
+    // --------------------------------------------------------------------------------------
+    // OPENCV FILENODE METHODS
+    // --------------------------------------------------------------------------------------
+
+    MatlabIOContainer operator[](const std::string& nodename) const {
+
+    }
 };
 
 #endif
