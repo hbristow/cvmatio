@@ -1,0 +1,15 @@
+<package>
+  <description brief="Matlab .mat file parser">
+    An open source parser for the Matlab version 5 .mat file format. The
+    implementation is derived from the matio project and the Mathworks
+    technical document describing the format.
+  </description>
+  <author>Hilton Bristow</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include"
+         lflags="-L${prefix}/lib -lcvmatio"/>
+  </export>
+</package>
