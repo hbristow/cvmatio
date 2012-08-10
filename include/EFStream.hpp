@@ -61,7 +61,7 @@ public:
 
     // method to swap the Endianness of a stream
     void swapEndian(char *s, std::streamsize N) {
-        for (int n = 0; n < N; n+=2) std::swap(s[n], s[n+1]);
+        for (unsigned int n = 0; n < N; n+=2) std::swap(s[n], s[n+1]);
     }
 
     // overloaded fstream read method with 

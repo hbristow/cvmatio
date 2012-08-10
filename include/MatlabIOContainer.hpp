@@ -55,6 +55,7 @@ class MatlabIOContainer : cv::FileNode {
 private: 
     std::string name_;
     boost::any data_;
+
 public:
     // constructors
     MatlabIOContainer() {}
@@ -114,9 +115,7 @@ public:
     // OPENCV FILENODE METHODS
     // --------------------------------------------------------------------------------------
 
-    MatlabIOContainer operator[](const std::string& nodename) const {
 
-    }
 };
 
 #endif

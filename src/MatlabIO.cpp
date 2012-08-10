@@ -39,6 +39,7 @@
 #include <cerrno>
 #include <cstring>
 #include <zlib.h>
+#include <iostream>
 #include <exception>
 #include "MatlabIO.hpp"
 using namespace std;
@@ -80,10 +81,10 @@ bool MatlabIO::close(void) {
  * @param vec the input vector
  * @return the product of elements in the input
  */
-template<class T>
+template<typename T>
 T product(const vector<T>& vec) {
 	T acc = 1;
-	for (int n = 0; n < vec.size(); ++n) acc *= vec[n];
+	for (unsigned int n = 0; n < vec.size(); ++n) acc *= vec[n];
 	return acc;
 }
 
@@ -101,7 +102,7 @@ void transposeMat(const Mat& src, Mat& dst) {
 	if (src.channels() > 1) {
 		vector<Mat> vec;
 		split(src, vec);
-		for (int n = 0; n < vec.size(); ++n) {
+		for (unsigned int n = 0; n < vec.size(); ++n) {
 			transpose(vec[n], vec[n]);
 		}
 		merge(vec, dst);
@@ -123,7 +124,7 @@ template<class T1, class T2>
 vector<T2> convertPrimitiveType(const vector<char>& in) {
 
 	// firstly reinterpret the input as type T1
-	int T1_size = in.size() / sizeof(T1);
+	const unsigned int T1_size = in.size() / sizeof(T1);
 	const T1* in_ptr = reinterpret_cast<const T1*>(&(in[0]));
 
 	// construct the new vector
@@ -143,9 +144,9 @@ vector<T2> convertPrimitiveType(const vector<char>& in) {
  */
 void MatlabIO::getHeader(void) {
     // get the header information from the Mat file
-    for (int n = 0; n < HEADER_LENGTH+1; ++n) header_[n] = '\0';
-    for (int n = 0; n < SUBSYS_LENGTH+1; ++n) subsys_[n] = '\0';
-    for (int n = 0; n < ENDIAN_LENGTH+1; ++n) endian_[n] = '\0';
+    for (unsigned int n = 0; n < HEADER_LENGTH+1; ++n) header_[n] = '\0';
+    for (unsigned int n = 0; n < SUBSYS_LENGTH+1; ++n) subsys_[n] = '\0';
+    for (unsigned int n = 0; n < ENDIAN_LENGTH+1; ++n) endian_[n] = '\0';
     fid_.read(header_, sizeof(char)*HEADER_LENGTH);
     fid_.read(subsys_, sizeof(char)*SUBSYS_LENGTH);
     fid_.read((char *)&version_, sizeof(int16_t));
@@ -165,22 +166,6 @@ void MatlabIO::getHeader(void) {
     bytes_read_ = 128;
 }
 
-
-MatlabIOContainer MatlabIO::uncompressFromBin(vector<char> data, uint32_t nbytes) {
-
-    //printf("I am a: compressed matrix\n");
-    MatlabIOContainer variable;
-    return variable;
-}
-
-template<class T>
-MatlabIOContainer MatlabIO::primitiveFromBin(vector<char> data, uint32_t nbytes) {
-
-
-    //printf("I am a: %s\n", typeid(T).name());
-    MatlabIOContainer variable;
-    return variable;
-}
 
 /*! @brief interpret the variable header information
  *
@@ -202,10 +187,8 @@ const char * MatlabIO::readVariableTag(uint32_t &data_type, uint32_t &dbytes, ui
     const uint32_t *datai = reinterpret_cast<const uint32_t *>(data);
     data_type = datai[0];
 
-    //printf("Small format?: %x\n", data_type >> 16 != 0);
     if ((data_type >> 16) != 0) {
         // small data format
-        //printf("Casting to small format...\n");
         dbytes = data_type >> 16;
         data_type = (data_type << 16) >> 16;
         small = true;
@@ -218,7 +201,6 @@ const char * MatlabIO::readVariableTag(uint32_t &data_type, uint32_t &dbytes, ui
     if (small) wbytes = 8;
     else if (data_type == MAT_COMPRESSED) wbytes = 8 + dbytes;
     else wbytes = 8 + dbytes + ((8-dbytes) % 8);
-    //printf("Padding: %d\n", ((8-dbytes) % 8)); }
 
     // return the seek head positioned over the data payload
     return data + (small ? 4 : 8);
@@ -232,7 +214,7 @@ const char * MatlabIO::readVariableTag(uint32_t &data_type, uint32_t &dbytes, ui
  * @param real
  * @return
  */
-MatlabIOContainer MatlabIO::constructStruct(vector<char>& name, vector<int32_t>& dims, vector<char>& real) {
+MatlabIOContainer MatlabIO::constructStruct(vector<char>& name, vector<uint32_t>& dims, vector<char>& real) {
 
 	vector<vector<MatlabIOContainer> > array;
 	const char* real_ptr = &(real[0]);
@@ -248,22 +230,20 @@ MatlabIOContainer MatlabIO::constructStruct(vector<char>& name, vector<int32_t>&
 	uint32_t nfields_dbytes;
 	uint32_t nfields_wbytes;
 	const char* nfields_ptr = readVariableTag(nfields_type, nfields_dbytes, nfields_wbytes, real_ptr+length_wbytes);
-	//printf("nfields_dbytes: %d,   length_bytes: %d\n", nfields_dbytes, length);
 	assert((nfields_dbytes % length) == 0);
 	uint32_t nfields = nfields_dbytes / length;
 
 	// populate a vector of field names
 	vector<string> field_names;
-	for (int n = 0; n < nfields; ++n) {
+	for (unsigned int n = 0; n < nfields; ++n) {
 		field_names.push_back(string(nfields_ptr+(n*length)));
-		//printf("Field name: %s\n", field_names[n].c_str());
 	}
 
 	// iterate through each of the cells and construct the matrices
 	const char* field_ptr = real_ptr+length_wbytes+nfields_wbytes;
-	for (int m = 0; m < product<int32_t>(dims); ++m) {
+	for (unsigned int m = 0; m < product<uint32_t>(dims); ++m) {
 		vector<MatlabIOContainer> strct;
-		for (int n = 0; n < nfields; ++n) {
+		for (unsigned int n = 0; n < nfields; ++n) {
 
 			MatlabIOContainer field;
 			uint32_t data_type;
@@ -295,12 +275,11 @@ MatlabIOContainer MatlabIO::constructStruct(vector<char>& name, vector<int32_t>&
  * @param real the real part
  * @return the wrapped cell array
  */
-MatlabIOContainer MatlabIO::constructCell(vector<char>& name, vector<int32_t>& dims, vector<char>& real) {
+MatlabIOContainer MatlabIO::constructCell(vector<char>& name, vector<uint32_t>& dims, vector<char>& real) {
 
-	//printf("--------------------\nInterpreting cell contents...\n"); fflush(stdout);
 	vector<MatlabIOContainer> cell;
 	char* field_ptr = &(real[0]);
-	for (int n = 0; n < product<int32_t>(dims); ++n) {
+	for (unsigned int n = 0; n < product<uint32_t>(dims); ++n) {
 		MatlabIOContainer field;
 		uint32_t data_type;
 		uint32_t dbytes;
@@ -324,7 +303,7 @@ MatlabIOContainer MatlabIO::constructCell(vector<char>& name, vector<int32_t>& d
  * @param imag
  * @return
  */
-MatlabIOContainer MatlabIO::constructSparse(vector<char>& name, vector<int32_t>& dims, vector<char>& real, vector<char>& imag) {
+MatlabIOContainer MatlabIO::constructSparse(vector<char>&, vector<uint32_t>&, vector<char>&, vector<char>&) {
 
 	MatlabIOContainer variable;
 	return variable;
@@ -340,7 +319,7 @@ MatlabIOContainer MatlabIO::constructSparse(vector<char>& name, vector<int32_t>&
  * @param real the string data
  * @return the wrapped string
  */
-MatlabIOContainer MatlabIO::constructString(vector<char>& name, vector<int32_t>& dims, vector<char>& real) {
+MatlabIOContainer MatlabIO::constructString(vector<char>& name, vector<uint32_t>&, vector<char>& real) {
 	// make sure the data is null terminated
 	real.push_back('\0');
 	return MatlabIOContainer(string(&(name[0])), string(&(real[0])));
@@ -366,7 +345,7 @@ MatlabIOContainer MatlabIO::constructString(vector<char>& name, vector<int32_t>&
  * @return the wrapped matrix
  */
 template<class T>
-MatlabIOContainer MatlabIO::constructMatrix(vector<char>& name, vector<int32_t>& dims, vector<char>& real, vector<char>& imag, uint32_t stor_type) {
+MatlabIOContainer MatlabIO::constructMatrix(vector<char>& name, vector<uint32_t>& dims, vector<char>& real, vector<char>& imag, uint32_t stor_type) {
 
 	vector<T> vec_real;
 	vector<T> vec_imag;
@@ -424,23 +403,23 @@ MatlabIOContainer MatlabIO::constructMatrix(vector<char>& name, vector<int32_t>&
 
 	// assert that the conversion has not modified the number of elements
 	uint32_t numel = 1;
-	for (int n = 0; n < dims.size(); ++n) numel *= dims[n];
+	for (unsigned int n = 0; n < dims.size(); ++n) numel *= dims[n];
 	assert(vec_real.size() == numel);
 
 	// if the data is a scalar, don't write it to a matrix
 	//if (vec_real.size() == 1 && vec_imag.size() == 0) return MatlabIOContainer(string(&(name[0])), vec_real[0]);
 
 	// get the number of channels
-	int channels = dims.size() == 3 ? dims[2] : 1;
+	const unsigned int channels = dims.size() == 3 ? dims[2] : 1;
 	bool complx = vec_imag.size() != 0;
 
 	// put each plane of the image into a vector
 	vector<Mat> sflat;
 	flat = Mat(vec_real, true);
-	for (int n = 0; n < channels; ++n)
+	for (unsigned int n = 0; n < channels; ++n)
 		sflat.push_back(flat(Range(dims[0]*dims[1]*n, dims[0]*dims[1]*(n+1)), Range::all()));
 	flat = Mat(vec_imag, true);
-	for (int n = 0; n < channels*complx; ++n)
+	for (unsigned int n = 0; n < channels*complx; ++n)
 		sflat.push_back(flat(Range(dims[0]*dims[1]*n, dims[0]*dims[1]*(n+1)), Range::all()));
 
 	// merge the planes into a matrix
@@ -470,11 +449,11 @@ MatlabIOContainer MatlabIO::constructMatrix(vector<char>& name, vector<int32_t>&
  *
  * @return the variable (matrix, struct, cell, scalar) wrapped in a container
  */
-MatlabIOContainer MatlabIO::collateMatrixFields(uint32_t data_type, uint32_t nbytes, vector<char> data) {
+MatlabIOContainer MatlabIO::collateMatrixFields(uint32_t, uint32_t, vector<char> data) {
 
     // get the flags
     bool complx  = data[9] & (1 << 3);
-    bool logical = data[9] & (1 << 1);
+    //bool logical = data[9] & (1 << 1);
     
     // get the type of the encapsulated data
     char enc_data_type = data[8];
@@ -486,7 +465,7 @@ MatlabIOContainer MatlabIO::collateMatrixFields(uint32_t data_type, uint32_t nby
     uint32_t dim_dbytes;
     uint32_t dim_wbytes;
     const char* dim_data = readVariableTag(dim_type, dim_dbytes, dim_wbytes, &(data[pre_wbytes]));
-    vector<int32_t> dims(reinterpret_cast<const int32_t *>(dim_data), reinterpret_cast<const int32_t *>(dim_data+dim_dbytes));
+    vector<uint32_t> dims(reinterpret_cast<const uint32_t *>(dim_data), reinterpret_cast<const uint32_t *>(dim_data+dim_dbytes));
     //printf("Complex?: %d\n", complx);
     //printf("Logical?: %d\n", logical);
     //printf("Dimensions: ");
@@ -529,7 +508,7 @@ MatlabIOContainer MatlabIO::collateMatrixFields(uint32_t data_type, uint32_t nby
     	uint32_t imag_wbytes;
     	const char* imag_data = readVariableTag(imag_type, imag_dbytes, imag_wbytes, &(data[pre_wbytes+dim_wbytes+name_wbytes+real_wbytes]));
     	assert(imag_type == real_type);
-    	for (imag_data; imag_data != imag_data+imag_dbytes; imag_data++) imag.push_back(*imag_data);
+    	for ( ; imag_data != imag_data+imag_dbytes; imag_data++) imag.push_back(*imag_data);
     }
 
     // construct whatever object we happened to get
@@ -577,6 +556,7 @@ vector<char> MatlabIO::uncompressVariable(uint32_t& data_type, uint32_t& dbytes,
     infstream.zfree  = Z_NULL;
     infstream.opaque = Z_NULL;
     int ok = inflateInit(&infstream);
+    if (!ok) { cerr << "Unable to inflate variable" << endl; exit(-5); }
 
     // inflate the variable header
     infstream.avail_in = data.size();
@@ -584,6 +564,7 @@ vector<char> MatlabIO::uncompressVariable(uint32_t& data_type, uint32_t& dbytes,
     infstream.avail_out = 8;
     infstream.next_out = (unsigned char *)&buf;
     ok = inflate(&infstream, Z_NO_FLUSH);
+    if (!ok) { cerr << "Unable to inflate variable" << endl; exit(-5); }
 
     // get the headers
     readVariableTag(data_type, dbytes, wbytes, buf);
@@ -738,14 +719,14 @@ std::vector<MatlabIOContainer> MatlabIO::read(void) {
 void MatlabIO::whos(vector<MatlabIOContainer> variables) const {
 
 	// get the longest filename
-	int flmax = 0;
-	for (int n = 0; n < variables.size(); ++n) if(variables[n].name().length() > flmax) flmax = variables[n].name().length();
+	unsigned int flmax = 0;
+	for (unsigned int n = 0; n < variables.size(); ++n) if(variables[n].name().length() > flmax) flmax = variables[n].name().length();
 
 	printf("-------------------------\n");
 	printf("File: %s\n", filename_.c_str());
 	printf("%s\n", header_);
 	printf("Variables:\n");
-	for (int n = 0; n < variables.size(); ++n) {
+	for (unsigned int n = 0; n < variables.size(); ++n) {
 		printf("%*s:  %s\n", flmax, variables[n].name().c_str(), variables[n].type().c_str());
 	}
 	printf("-------------------------\n");

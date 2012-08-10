@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
     // search for a variable named "im" and "gray"
     Mat gray;
     Mat im;
-    for (int n = 0; n < variables.size(); ++n) {
+    for (unsigned int n = 0; n < variables.size(); ++n) {
     	if (variables[n].name().compare("im") == 0) {
     		im = variables[n].data<Mat>();
     		cvtColor(im, im, CV_RGB2BGR);

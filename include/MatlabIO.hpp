@@ -82,18 +82,17 @@ private:
     void getHeader(void);
     void setHeader(void);
     bool hasVariable(void) { return fid_.peek() != EOF; }
-	template<class T> MatlabIOContainer constructMatrix(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real, std::vector<char>& imag, uint32_t stor_type);
-	MatlabIOContainer constructString(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real);
-	MatlabIOContainer constructSparse(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real, std::vector<char>& imag);
-	MatlabIOContainer constructCell(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real);
-	MatlabIOContainer constructStruct(std::vector<char>& name, std::vector<int32_t>& dims, std::vector<char>& real);
+	template<class T> MatlabIOContainer constructMatrix(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real, std::vector<char>& imag, uint32_t stor_type);
+	MatlabIOContainer constructString(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real);
+	MatlabIOContainer constructSparse(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real, std::vector<char>& imag);
+	MatlabIOContainer constructCell(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real);
+	MatlabIOContainer constructStruct(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real);
 	const char *      readVariableTag(uint32_t &data_type, uint32_t &dbytes, uint32_t &wbytes, const char *data);
 	MatlabIOContainer collateMatrixFields(uint32_t data_type, uint32_t nbytes, std::vector<char> data);
 	std::vector<char> uncompressVariable(uint32_t& data_type, uint32_t& dbytes, uint32_t& wbytes, const std::vector<char> &data);
     MatlabIOContainer readVariable(uint32_t data_type, uint32_t nbytes, const std::vector<char> &data);
     MatlabIOContainer readBlock(void);
     MatlabIOContainer uncompressFromBin(std::vector<char> data, uint32_t nbytes);
-    template<class T> MatlabIOContainer primitiveFromBin(std::vector<char> data, uint32_t nbytes);
 public:
     // constructors
     MatlabIO() {}
@@ -110,7 +109,7 @@ public:
     // templated functions (must be declared and defined in the header file)
     template<class T>
     T find(std::vector<MatlabIOContainer>& variables, std::string name) const {
-    	for (int n = 0; n < variables.size(); ++n) {
+    	for (unsigned int n = 0; n < variables.size(); ++n) {
     		if (variables[n].name().compare(name) == 0) {
     			if (isPrimitiveType<T>()) {
     				return variables[n].data<cv::Mat>().at<T>(0);
@@ -123,7 +122,7 @@ public:
     }
 
     MatlabIOContainer find(std::vector<MatlabIOContainer>& variables, std::string name) const {
-    	for (int n = 0; n < variables.size(); ++n) {
+    	for (unsigned int n = 0; n < variables.size(); ++n) {
     		if (variables[n].name().compare(name) == 0) return variables[n];
     	}
     	throw new std::exception();
@@ -131,7 +130,7 @@ public:
 
     template<class T>
     bool typeEquals(std::vector<MatlabIOContainer>& variables, std::string name) const {
-    	for (int n = 0; n < variables.size(); ++n) {
+    	for (unsigned int n = 0; n < variables.size(); ++n) {
     		if (variables[n].name().compare(name) == 0) return variables[n].typeEquals<T>();
     	}
     	return false;
