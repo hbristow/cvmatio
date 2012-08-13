@@ -556,7 +556,7 @@ vector<char> MatlabIO::uncompressVariable(uint32_t& data_type, uint32_t& dbytes,
     infstream.zfree  = Z_NULL;
     infstream.opaque = Z_NULL;
     int ok = inflateInit(&infstream);
-    if (ok != Z_OK) { cerr << "Unable to inflate variable" << endl; }//exit(-5); }
+    if (ok != Z_OK) { cerr << "Unable to inflate variable" << endl; exit(-5); }
 
     // inflate the variable header
     infstream.avail_in = data.size();
@@ -564,7 +564,7 @@ vector<char> MatlabIO::uncompressVariable(uint32_t& data_type, uint32_t& dbytes,
     infstream.avail_out = 8;
     infstream.next_out = (unsigned char *)&buf;
     ok = inflate(&infstream, Z_NO_FLUSH);
-    if (ok != Z_OK) { cerr << "Unable to inflate variable" << endl; }//exit(-5); }
+    if (ok != Z_OK) { cerr << "Unable to inflate variable" << endl; exit(-5); }
 
     // get the headers
     readVariableTag(data_type, dbytes, wbytes, buf);
