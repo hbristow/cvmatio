@@ -51,7 +51,7 @@ typedef std::vector<std::vector<MatlabIOContainer> > vector2DMatlabIOContainer;
  *  This allows multiple MatlabIOContainers to be stored in a single vector
  *  when reading multiple variables from a file or constructing a Matlab struct.
  */
-class MatlabIOContainer : cv::FileNode {
+class MatlabIOContainer {
 private: 
     std::string name_;
     boost::any data_;

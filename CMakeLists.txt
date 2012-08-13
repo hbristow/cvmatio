@@ -9,7 +9,7 @@ option(BUILD_DOC        "Build documentation with Doxygen"          ON)
 
 # --------------------
 # CATKIN
-find_package(catkin QUIET)
+#find_package(catkin QUIET)
 if (catkin_FOUND)
     catkin_stack()
     catkin_project(cvmatio
