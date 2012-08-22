@@ -9,8 +9,9 @@ option(BUILD_DOC        "Build documentation with Doxygen"          ON)
 
 # --------------------
 # CATKIN
-#find_package(catkin QUIET)
+set(BUILD_CATKIN OFF)
 if (catkin_FOUND)
+    set(BUILD_CATKIN ON)
     catkin_stack()
     catkin_project(cvmatio
                    DEPENDS Boost OpenCV
@@ -51,3 +52,15 @@ if(BUILD_DOC)
     configure_file(${PROJECT_SOURCE_DIR}/doc/Doxyfile.in ${PROJECT_SOURCE_DIR}/doc/Doxyfile @ONLY)
     add_custom_target(cvmatio_doc ALL ${DOXYGEN_EXECUTABLE} ${PROJECT_SOURCE_DIR}/doc/Doxyfile)
 endif()
+
+# configuration summary
+message("")
+message("---------------------------------------------")
+message(${PROJECT_NAME} " Configuration Summary")
+message("")
+message("Building with ECTO/Catkin:     ${BUILD_CATKIN}")
+message("Build as executable:           ${BUILD_EXECUTABLE}")
+message("Build with documentation:      ${BUILD_DOC}")
+message("Build type:                    ${CMAKE_BUILD_TYPE}")
+message("")
+message("---------------------------------------------")
