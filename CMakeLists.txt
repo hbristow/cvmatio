@@ -12,12 +12,16 @@ option(BUILD_DOC        "Build documentation with Doxygen"          ON)
 set(BUILD_CATKIN OFF)
 if (catkin_FOUND)
     set(BUILD_CATKIN ON)
+    if (${catkin_VERSION} VERSION_GREATER "0.5.28")
+        catkin_package(INCLUDE_DIRS include)
+    else()
     catkin_stack()
     catkin_project(cvmatio
                    DEPENDS Boost OpenCV
                    INCLUDE_DIRS include
                    LIBRARIES cvmatio
     )
+    endif()
 endif()
 
 # --------------------

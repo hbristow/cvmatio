@@ -1,4 +1,5 @@
 # build the project
+set(BUILD_EXECUTABLE False)
 if(BUILD_EXECUTABLE)
     set(SRC_FILES MatlabIO.cpp main.cpp)
     add_executable(${PROJECT_NAME} ${SRC_FILES})
