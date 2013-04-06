@@ -1,0 +1,23 @@
+-------------------------------------------------------------------------------
+                               CVMATIO
+          An open source Matlab-MAT file parser written in C++
+-------------------------------------------------------------------------------
+
+CVMATIO implements a Matlab v7 MAT file parser in C++, giving users the 
+ability to interact with binary MAT files in their own projects. 
+
+The project has the following dependencies:
+    
+    OpenCV  REQUIRED (for translating Matlab types)
+    CMake   REQUIRED (for building)
+    ZLib    REQUIRED (for uncompressing Mat files)
+    Doxygen OPTIONAL (for documentation)
+
+BUILDING
+To configure the project, set the options at the top of CMakeLists.txt
+To build the project, follow the normal cmake routine from the root folder:
+
+    >> mkdir build
+    >> cd build/
+    >> cmake ..
+    >> make -j8
