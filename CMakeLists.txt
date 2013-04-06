@@ -52,9 +52,7 @@ add_subdirectory(src)
 
 # build the doxygen pdf
 if(BUILD_DOC)
-    find_package(Doxygen)
-    configure_file(${PROJECT_SOURCE_DIR}/doc/Doxyfile.in ${PROJECT_SOURCE_DIR}/doc/Doxyfile @ONLY)
-    add_custom_target(cvmatio_doc ALL ${DOXYGEN_EXECUTABLE} ${PROJECT_SOURCE_DIR}/doc/Doxyfile)
+    add_subdirectory(doc)
 endif()
 
 # configuration summary

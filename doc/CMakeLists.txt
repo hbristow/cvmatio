@@ -1,0 +1,7 @@
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+    configure_file(${PROJECT_SOURCE_DIR}/doc/Doxyfile.in ${PROJECT_SOURCE_DIR}/doc/Doxyfile @ONLY)
+    add_custom_target(cvmatio_doc ALL ${DOXYGEN_EXECUTABLE} ${PROJECT_SOURCE_DIR}/doc/Doxyfile)
+else()
+    set(BUILD_DOC OFF PARENT_SCOPE)
+endif()
