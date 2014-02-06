@@ -15,6 +15,6 @@ target_link_libraries(${PROJECT_NAME}   ${Boost_LIBRARIES}
 )
 
 # install
-install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${PROJECT_SOURCE_DIR}/bin
-                                LIBRARY DESTINATION ${PROJECT_SOURCE_DIR}/lib
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin
+                                LIBRARY DESTINATION lib
 )
