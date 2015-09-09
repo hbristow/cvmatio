@@ -214,7 +214,7 @@ const char * MatlabIO::readVariableTag(uint32_t &data_type, uint32_t &dbytes, ui
  * @param real
  * @return
  */
-MatlabIOContainer MatlabIO::constructStruct(vector<char>& name, vector<uint32_t>& dims, vector<char>& real) const {
+MatlabIOContainer MatlabIO::constructStruct(const vector<char>& name, const vector<uint32_t>& dims, const vector<char>& real) const {
 
 	vector<vector<MatlabIOContainer> > array;
 	const char* real_ptr = &(real[0]);
@@ -275,10 +275,10 @@ MatlabIOContainer MatlabIO::constructStruct(vector<char>& name, vector<uint32_t>
  * @param real the real part
  * @return the wrapped cell array
  */
-MatlabIOContainer MatlabIO::constructCell(vector<char>& name, vector<uint32_t>& dims, vector<char>& real) const {
+MatlabIOContainer MatlabIO::constructCell(const vector<char>& name, const vector<uint32_t>& dims, const vector<char>& real) const {
 
 	vector<MatlabIOContainer> cell;
-	char* field_ptr = &(real[0]);
+	const char* field_ptr = &(real[0]);
 	for (unsigned int n = 0; n < product<uint32_t>(dims); ++n) {
 		MatlabIOContainer field;
 		uint32_t data_type;
@@ -303,7 +303,7 @@ MatlabIOContainer MatlabIO::constructCell(vector<char>& name, vector<uint32_t>& 
  * @param imag
  * @return
  */
-MatlabIOContainer MatlabIO::constructSparse(vector<char>&, vector<uint32_t>&, vector<char>&, vector<char>&) const {
+MatlabIOContainer MatlabIO::constructSparse(const vector<char>&, const vector<uint32_t>&, const vector<char>&, const vector<char>&) const {
 
 	MatlabIOContainer variable;
 	return variable;
@@ -319,10 +319,8 @@ MatlabIOContainer MatlabIO::constructSparse(vector<char>&, vector<uint32_t>&, ve
  * @param real the string data
  * @return the wrapped string
  */
-MatlabIOContainer MatlabIO::constructString(vector<char>& name, vector<uint32_t>&, vector<char>& real) const {
-	// make sure the data is null terminated
-	real.push_back('\0');
-	return MatlabIOContainer(string(&(name[0])), string(&(real[0])));
+MatlabIOContainer MatlabIO::constructString(const vector<char>& name, const vector<uint32_t>&, const vector<char>& real) const {
+	return MatlabIOContainer(string(&(name[0])), string(&(real[0]), real.size()));
 }
 
 
@@ -345,7 +343,7 @@ MatlabIOContainer MatlabIO::constructString(vector<char>& name, vector<uint32_t>
  * @return the wrapped matrix
  */
 template<class T>
-MatlabIOContainer MatlabIO::constructMatrix(vector<char>& name, vector<uint32_t>& dims, vector<char>& real, vector<char>& imag, uint32_t stor_type) const {
+MatlabIOContainer MatlabIO::constructMatrix(const vector<char>& name, const vector<uint32_t>& dims, const vector<char>& real, const vector<char>& imag, uint32_t stor_type) const {
 
 	vector<T> vec_real;
 	vector<T> vec_imag;

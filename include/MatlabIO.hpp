@@ -82,11 +82,11 @@ private:
     void getHeader(void);
     void setHeader(void);
     bool hasVariable(void) { return fid_.peek() != EOF; }
-	template<class T> MatlabIOContainer constructMatrix(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real, std::vector<char>& imag, uint32_t stor_type) const;
-	MatlabIOContainer constructString(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real) const;
-	MatlabIOContainer constructSparse(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real, std::vector<char>& imag) const;
-	MatlabIOContainer constructCell(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real) const;
-	MatlabIOContainer constructStruct(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real) const;
+	template<class T> MatlabIOContainer constructMatrix(const std::vector<char>& name, const std::vector<uint32_t>& dims, const std::vector<char>& real, const std::vector<char>& imag, uint32_t stor_type) const;
+	MatlabIOContainer constructString(const std::vector<char>& name, const std::vector<uint32_t>& dims,const  std::vector<char>& real) const;
+	MatlabIOContainer constructSparse(const std::vector<char>& name, const std::vector<uint32_t>& dims, const std::vector<char>& real, const std::vector<char>& imag) const;
+	MatlabIOContainer constructCell(const std::vector<char>& name, const std::vector<uint32_t>& dims, const std::vector<char>& real) const;
+	MatlabIOContainer constructStruct(const std::vector<char>& name, const std::vector<uint32_t>& dims, const std::vector<char>& real) const;
 	const char *      readVariableTag(uint32_t &data_type, uint32_t &dbytes, uint32_t &wbytes, const char *data) const;
 	MatlabIOContainer collateMatrixFields(uint32_t data_type, uint32_t nbytes, const std::vector<char>& data) const;
 	std::vector<char> uncompressVariable(uint32_t& data_type, uint32_t& dbytes, uint32_t& wbytes, const std::vector<char> &data) const;
