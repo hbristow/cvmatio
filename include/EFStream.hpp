@@ -56,7 +56,7 @@ public:
     EFStream() : byte_swap_(false) {}
 
     // get and set byte swap methods
-    bool byteSwap(void) { return byte_swap_; }
+    bool byteSwap(void) const { return byte_swap_; }
     void setByteSwap(bool state) { byte_swap_ = state; }
 
     // method to swap the Endianness of a stream

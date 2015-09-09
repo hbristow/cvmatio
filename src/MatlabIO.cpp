@@ -51,7 +51,7 @@ using namespace cv;
  * @param mode either "r" for reading or "w" for writing
  * @return true if the file open succeeded, false otherwise
  */
-bool MatlabIO::open(string filename, string mode) {
+bool MatlabIO::open(const string& filename, const string& mode) {
 
     // open the file
 	filename_ = filename;
@@ -181,7 +181,7 @@ void MatlabIO::getHeader(void) {
  * @param data the input binary blob
  * @return a pointer to the beginning of the data segment of the binary blob
  */
-const char * MatlabIO::readVariableTag(uint32_t &data_type, uint32_t &dbytes, uint32_t &wbytes, const char *data) {
+const char * MatlabIO::readVariableTag(uint32_t &data_type, uint32_t &dbytes, uint32_t &wbytes, const char *data) const {
     
 	bool small = false;
     const uint32_t *datai = reinterpret_cast<const uint32_t *>(data);
@@ -214,7 +214,7 @@ const char * MatlabIO::readVariableTag(uint32_t &data_type, uint32_t &dbytes, ui
  * @param real
  * @return
  */
-MatlabIOContainer MatlabIO::constructStruct(vector<char>& name, vector<uint32_t>& dims, vector<char>& real) {
+MatlabIOContainer MatlabIO::constructStruct(vector<char>& name, vector<uint32_t>& dims, vector<char>& real) const {
 
 	vector<vector<MatlabIOContainer> > array;
 	const char* real_ptr = &(real[0]);
@@ -275,7 +275,7 @@ MatlabIOContainer MatlabIO::constructStruct(vector<char>& name, vector<uint32_t>
  * @param real the real part
  * @return the wrapped cell array
  */
-MatlabIOContainer MatlabIO::constructCell(vector<char>& name, vector<uint32_t>& dims, vector<char>& real) {
+MatlabIOContainer MatlabIO::constructCell(vector<char>& name, vector<uint32_t>& dims, vector<char>& real) const {
 
 	vector<MatlabIOContainer> cell;
 	char* field_ptr = &(real[0]);
@@ -303,7 +303,7 @@ MatlabIOContainer MatlabIO::constructCell(vector<char>& name, vector<uint32_t>& 
  * @param imag
  * @return
  */
-MatlabIOContainer MatlabIO::constructSparse(vector<char>&, vector<uint32_t>&, vector<char>&, vector<char>&) {
+MatlabIOContainer MatlabIO::constructSparse(vector<char>&, vector<uint32_t>&, vector<char>&, vector<char>&) const {
 
 	MatlabIOContainer variable;
 	return variable;
@@ -319,7 +319,7 @@ MatlabIOContainer MatlabIO::constructSparse(vector<char>&, vector<uint32_t>&, ve
  * @param real the string data
  * @return the wrapped string
  */
-MatlabIOContainer MatlabIO::constructString(vector<char>& name, vector<uint32_t>&, vector<char>& real) {
+MatlabIOContainer MatlabIO::constructString(vector<char>& name, vector<uint32_t>&, vector<char>& real) const {
 	// make sure the data is null terminated
 	real.push_back('\0');
 	return MatlabIOContainer(string(&(name[0])), string(&(real[0])));
@@ -345,7 +345,7 @@ MatlabIOContainer MatlabIO::constructString(vector<char>& name, vector<uint32_t>
  * @return the wrapped matrix
  */
 template<class T>
-MatlabIOContainer MatlabIO::constructMatrix(vector<char>& name, vector<uint32_t>& dims, vector<char>& real, vector<char>& imag, uint32_t stor_type) {
+MatlabIOContainer MatlabIO::constructMatrix(vector<char>& name, vector<uint32_t>& dims, vector<char>& real, vector<char>& imag, uint32_t stor_type) const {
 
 	vector<T> vec_real;
 	vector<T> vec_imag;
@@ -449,7 +449,7 @@ MatlabIOContainer MatlabIO::constructMatrix(vector<char>& name, vector<uint32_t>
  *
  * @return the variable (matrix, struct, cell, scalar) wrapped in a container
  */
-MatlabIOContainer MatlabIO::collateMatrixFields(uint32_t, uint32_t, vector<char> data) {
+MatlabIOContainer MatlabIO::collateMatrixFields(uint32_t, uint32_t, const vector<char>& data) const {
 
     // get the flags
     bool complx  = data[9] & (1 << 3);
@@ -548,7 +548,7 @@ MatlabIOContainer MatlabIO::collateMatrixFields(uint32_t, uint32_t, vector<char>
  * @param data the binary blob
  * @return the binary blob, uncompressed
  */
-vector<char> MatlabIO::uncompressVariable(uint32_t& data_type, uint32_t& dbytes, uint32_t& wbytes, const vector<char> &data) {
+vector<char> MatlabIO::uncompressVariable(uint32_t& data_type, uint32_t& dbytes, uint32_t& wbytes, const vector<char> &data) const {
     // setup the inflation parameters
     char buf[8];
     z_stream infstream;
@@ -593,7 +593,7 @@ vector<char> MatlabIO::uncompressVariable(uint32_t& data_type, uint32_t& dbytes,
  * @param data the binary blob
  * @return an interpreted variable
  */
-MatlabIOContainer MatlabIO::readVariable(uint32_t data_type, uint32_t nbytes, const vector<char> &data) {
+MatlabIOContainer MatlabIO::readVariable(uint32_t data_type, uint32_t nbytes, const vector<char> &data) const {
 
     // interpret the data
     MatlabIOContainer variable;
@@ -644,7 +644,7 @@ MatlabIOContainer MatlabIO::readVariable(uint32_t data_type, uint32_t nbytes, co
  *
  * @return the block of data interpreted as a variable and stored in a generic container
  */
-MatlabIOContainer MatlabIO::readBlock(void) {
+MatlabIOContainer MatlabIO::readBlock(void) const {
 
     // allocate the output
     MatlabIOContainer variable;
@@ -716,7 +716,7 @@ std::vector<MatlabIOContainer> MatlabIO::read(void) {
  * a list of variables and their C++ datatypes stored in the associated .Mat file
  * @param variables the variables read from the .Mat file using the read() function
  */
-void MatlabIO::whos(vector<MatlabIOContainer> variables) const {
+void MatlabIO::whos(const vector<MatlabIOContainer>& variables) const {
 
 	// get the longest filename
 	unsigned int flmax = 0;

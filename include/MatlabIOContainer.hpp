@@ -64,12 +64,12 @@ public:
      * @param name the string name of the variable
      * @param data the associated data, of any type
      */
-    MatlabIOContainer(const std::string name, const boost::any data) : name_(name), data_(data) {}
+    MatlabIOContainer(const std::string& name, const boost::any data) : name_(name), data_(data) {}
     // destructor
     ~MatlabIOContainer() {}
     // set methods
-    void setName(const std::string name) { name_ = name; }
-    void setData(const boost::any data) { data_ = data; }
+    void setName(const std::string& name) { name_ = name; }
+    void setData(const boost::any& data) { data_ = data; }
     // get methods
     /*! @brief Check if the stored type is equal to the templated type
      *
@@ -102,7 +102,7 @@ public:
 		if (tp == typeid(void)) return TypeName<void>::toString();
 		return std::string(tp.name());
 	}
-    std::string name(void) const { return name_; }
+    const std::string& name(void) const { return name_; }
     /*! @brief The stored data
      *
      * Returns the stored data, cast to the templated type
