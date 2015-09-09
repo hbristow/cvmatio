@@ -121,7 +121,7 @@ public:
     	throw new std::exception();
     }
 
-    MatlabIOContainer find(const std::vector<MatlabIOContainer>& variables, const std::string name) const {
+    MatlabIOContainer find(const std::vector<MatlabIOContainer>& variables, const std::string& name) const {
     	for (unsigned int n = 0; n < variables.size(); ++n) {
     		if (variables[n].name().compare(name) == 0) return variables[n];
     	}
@@ -129,7 +129,7 @@ public:
     }
 
     template<class T>
-    bool typeEquals(const std::vector<MatlabIOContainer>& variables, const std::string name) const {
+    bool typeEquals(const std::vector<MatlabIOContainer>& variables, const std::string& name) const {
     	for (unsigned int n = 0; n < variables.size(); ++n) {
     		if (variables[n].name().compare(name) == 0) return variables[n].typeEquals<T>();
     	}
