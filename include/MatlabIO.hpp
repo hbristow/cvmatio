@@ -118,14 +118,14 @@ public:
     			}
     		}
     	}
-    	throw new std::exception();
+    	throw std::invalid_argument("variable named '" + name + "' not found");
     }
 
     MatlabIOContainer find(std::vector<MatlabIOContainer>& variables, std::string name) const {
     	for (unsigned int n = 0; n < variables.size(); ++n) {
     		if (variables[n].name().compare(name) == 0) return variables[n];
     	}
-    	throw new std::exception();
+    	throw std::invalid_argument("variable named '" + name + "' not found");
     }
 
     template<class T>
