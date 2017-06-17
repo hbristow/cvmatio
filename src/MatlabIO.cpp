@@ -570,15 +570,12 @@ vector<char> MatlabIO::uncompressVariable(uint32_t& data_type, uint32_t& dbytes,
     readVariableTag(data_type, dbytes, wbytes, buf);
 
     // inflate the remainder of the variable, now that we know its size
-    char *udata_tmp = new char[dbytes];
+    vector<char> udata(dbytes);
     infstream.avail_out = dbytes;
-    infstream.next_out = (unsigned char *)udata_tmp;
+    infstream.next_out = reinterpret_cast<unsigned char *>(&udata[0]);
     inflate(&infstream, Z_FINISH);
     inflateEnd(&infstream);
 
-    // convert to a vector
-    vector<char> udata(udata_tmp, udata_tmp+dbytes);
-    delete [] udata_tmp;
     return udata;
 
 }
@@ -661,10 +658,8 @@ MatlabIOContainer MatlabIO::readBlock(void) {
 
     // read the binary data block
     //printf("\nReading binary data block...\n"); fflush(stdout);
-    char *data_tmp = new char[dbytes];
-    fid_.read(data_tmp, sizeof(char)*dbytes);
-    vector<char> data(data_tmp, data_tmp+dbytes);
-    delete [] data_tmp;
+    vector<char> data(dbytes);
+    fid_.read(&data[0], sizeof(char)*dbytes);
 
     // move the seek head position to the next 64-bit boundary
     // (but only if the data is uncompressed. Saving yet another 8 tiny bytes...)
