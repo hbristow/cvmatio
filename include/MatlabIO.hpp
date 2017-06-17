@@ -77,38 +77,38 @@ private:
     bool byte_swap_;
     int bytes_read_;
     std::string filename_;
-    EFStream fid_;
+    mutable EFStream fid_;
     // internal methods
     void getHeader(void);
     void setHeader(void);
     bool hasVariable(void) { return fid_.peek() != EOF; }
-	template<class T> MatlabIOContainer constructMatrix(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real, std::vector<char>& imag, uint32_t stor_type);
-	MatlabIOContainer constructString(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real);
-	MatlabIOContainer constructSparse(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real, std::vector<char>& imag);
-	MatlabIOContainer constructCell(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real);
-	MatlabIOContainer constructStruct(std::vector<char>& name, std::vector<uint32_t>& dims, std::vector<char>& real);
-	const char *      readVariableTag(uint32_t &data_type, uint32_t &dbytes, uint32_t &wbytes, const char *data);
-	MatlabIOContainer collateMatrixFields(uint32_t data_type, uint32_t nbytes, std::vector<char> data);
-	std::vector<char> uncompressVariable(uint32_t& data_type, uint32_t& dbytes, uint32_t& wbytes, const std::vector<char> &data);
-    MatlabIOContainer readVariable(uint32_t data_type, uint32_t nbytes, const std::vector<char> &data);
-    MatlabIOContainer readBlock(void);
-    MatlabIOContainer uncompressFromBin(std::vector<char> data, uint32_t nbytes);
+	template<class T> MatlabIOContainer constructMatrix(const std::vector<char>& name, const std::vector<uint32_t>& dims, const std::vector<char>& real, const std::vector<char>& imag, uint32_t stor_type) const;
+	MatlabIOContainer constructString(const std::vector<char>& name, const std::vector<uint32_t>& dims,const  std::vector<char>& real) const;
+	MatlabIOContainer constructSparse(const std::vector<char>& name, const std::vector<uint32_t>& dims, const std::vector<char>& real, const std::vector<char>& imag) const;
+	MatlabIOContainer constructCell(const std::vector<char>& name, const std::vector<uint32_t>& dims, const std::vector<char>& real) const;
+	MatlabIOContainer constructStruct(const std::vector<char>& name, const std::vector<uint32_t>& dims, const std::vector<char>& real) const;
+	const char *      readVariableTag(uint32_t &data_type, uint32_t &dbytes, uint32_t &wbytes, const char *data) const;
+	MatlabIOContainer collateMatrixFields(uint32_t data_type, uint32_t nbytes, const std::vector<char>& data) const;
+	std::vector<char> uncompressVariable(uint32_t& data_type, uint32_t& dbytes, uint32_t& wbytes, const std::vector<char> &data) const;
+    MatlabIOContainer readVariable(uint32_t data_type, uint32_t nbytes, const std::vector<char> &data) const;
+    MatlabIOContainer readBlock(void) const;
+    MatlabIOContainer uncompressFromBin(std::vector<char> data, uint32_t nbytes) const;
 public:
     // constructors
     MatlabIO() {}
     // destructor
     ~MatlabIO() { close(); }
     // get and set methods
-    std::string filename(void) { return std::string(filename_); }
+    const std::string& filename(void) const { return filename_; }
     // read and write routines
-    bool open(std::string filename, std::string mode);
+    bool open(const std::string& filename, const std::string& mode);
     bool close(void);
     std::vector<MatlabIOContainer> read(void);
-    void whos(std::vector<MatlabIOContainer> variables) const;
+    void whos(const std::vector<MatlabIOContainer>& variables) const;
 
     // templated functions (must be declared and defined in the header file)
     template<class T>
-    T find(std::vector<MatlabIOContainer>& variables, std::string name) const {
+    T find(const std::vector<MatlabIOContainer>& variables, const std::string& name) const {
     	for (unsigned int n = 0; n < variables.size(); ++n) {
     		if (variables[n].name().compare(name) == 0) {
     			if (isPrimitiveType<T>()) {
@@ -121,7 +121,7 @@ public:
     	throw new std::exception();
     }
 
-    MatlabIOContainer find(std::vector<MatlabIOContainer>& variables, std::string name) const {
+    MatlabIOContainer find(const std::vector<MatlabIOContainer>& variables, const std::string& name) const {
     	for (unsigned int n = 0; n < variables.size(); ++n) {
     		if (variables[n].name().compare(name) == 0) return variables[n];
     	}
@@ -129,7 +129,7 @@ public:
     }
 
     template<class T>
-    bool typeEquals(std::vector<MatlabIOContainer>& variables, std::string name) const {
+    bool typeEquals(const std::vector<MatlabIOContainer>& variables, const std::string& name) const {
     	for (unsigned int n = 0; n < variables.size(); ++n) {
     		if (variables[n].name().compare(name) == 0) return variables[n].typeEquals<T>();
     	}
