@@ -122,7 +122,12 @@ void transposeMat(const Mat& src, Mat& dst) {
  */
 template<class T1, class T2>
 vector<T2> convertPrimitiveType(const vector<char>& in) {
-
+	// check to make sure the input vector isn't empty
+	if(in.empty()) {
+	    // The input vector is empty
+	    vector<T2> out;
+	    return out;
+  	}
 	// firstly reinterpret the input as type T1
 	const unsigned int T1_size = in.size() / sizeof(T1);
 	const T1* in_ptr = reinterpret_cast<const T1*>(&(in[0]));
